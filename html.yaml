@@ -1,0 +1,191 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::206332737656:role/infralib-html
+  name: html
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Role
+metadata:
+  name: infralib-html
+spec:
+  forProvider:
+    assumeRolePolicyDocument: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::206332737656:oidc-provider/OIDCVALUE"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "OIDCVALUE:aud": "sts.amazonaws.com",
+                "OIDCVALUE:sub": "system:serviceaccount:html:html"
+              }
+            }
+          }
+        ]
+      }
+  providerConfigRef:
+    name: crossplane-aws
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Policy
+metadata:
+  name: infralib-html
+spec:
+  forProvider:
+    name: infralib-html
+    document: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "s3:ListObjects*",
+              "s3:ListBucket",
+              "s3:PutObject",
+              "s3:GetObject",
+              "s3:DeleteObject"
+            ],
+            "Resource": [
+              "arn:aws:s3:::entigo-training-feedback/*"
+            ]
+          },
+          {
+            "Effect": "Allow",
+            "Action": [
+              "s3:ListBucket"
+            ],
+            "Resource": [
+              "arn:aws:s3:::entigo-training-feedback"
+            ]
+          }
+        ]
+      }
+
+  providerConfigRef:
+    name: crossplane-aws
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: infralib-html
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::206332737656:policy/infralib-html
+    roleNameRef:
+      name: infralib-html
+  providerConfigRef:
+    name: crossplane-aws
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: html
+spec:
+  storageClassName: gp3-no-retain
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: html
+spec:
+  selector:
+    matchLabels:
+      app: html
+  serviceName: "html"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: html
+    spec:
+      serviceAccountName: html
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: html
+        image: nginx:1.25
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: html
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: data
+      - name: api
+        image: martivo/lab-presenter:api
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: api
+        env:
+        - name: FILE
+          value: infralib.csv
+        - name: BUCKET
+          value: entigo-training-feedback
+      volumes:
+       - name: data
+         persistentVolumeClaim:
+           claimName: html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: html
+spec:
+  ports:
+  - name: html
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: api
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: html
+---
+             
+              
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/group.name: external
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  name: html
+spec:
+  ingressClassName: alb
+  rules:
+  - host: html.infralib.learn.entigo.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: html
+            port:
+              number: 8080
+        path: /submit
+        pathType: Prefix
+      - backend:
+          service:
+            name: html
+            port:
+              number: 80
+        path: /
+        pathType: Prefix

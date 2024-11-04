@@ -1,0 +1,4 @@
+create_private: false
+create_public: true
+parent_zone_id: REPLACEME
+public_subdomain_name: "{{ .config.prefix }}"
