@@ -18,16 +18,17 @@ The "{{ .output.**net.main**.vpc\_id }}" and "{{ .output.**net.main**.public\_su
 
 ![agent_1.png](agent_1.png)
 
-Infralib modules can define their expected inputs as part of the module code. Users do not not have to configure these inputs unless they want to - avoiding mistakes and saving time.
+Infralib modules can define their expected inputs as part of the module code. 
 
-This is why the "aws/eks" module did not have to configure a "vpc\_id" or "public\_subnets" input in the configuration. But the generated infrastructure code in "main.tf" does contain these inputs.
+Users do not not have to configure these inputs unless they want to - avoiding mistakes and saving time. 
+
+This is why the "aws/eks" module did not have to configure a "vpc\_id" or "public\_subnets" input in the configuration. But the generated infrastructure code in "main.tf" does contain the inputs with correct values.
 
 ![agent_2.png](agent_2.png)
 
 The **".toutput"** template works even when the step names or module names are changed. It will find the inputs regardless whether the other module is in the same step or not. 
 
-![agent_3.png](agent_3.png)
-
+**The module that is creating the outputs can originate from another source or be entirely replaced as long as it provides the same output parameters.**
 
 The **".touput"** does not work when a module is called multiple times. Then all the inputs have to be configured using **".output"**.
 

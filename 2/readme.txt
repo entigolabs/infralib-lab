@@ -27,11 +27,11 @@ Expand "Variables" then click on "Add variable".
 
 ![gitlab_expand.png](gitlab_expand.png)
 
-Add a variable into Gitlab with the key AWS\_ACCESS\_KEY\_ID.
+Add a masked variable into Gitlab with the key AWS\_ACCESS\_KEY\_ID.
 The credentials were saved in AWS SSM. Get the value for **AWS\_ACCESS\_KEY\_ID** with the following command.
 > $ aws ssm get-parameter --name /entigo-infralib/dev-service-account-eu-north-1/access_key_id --with-decryption --query Parameter.Value --output text --region eu-north-1
 
-Add a variable into Gitlab with the key AWS\_SECRET\_ACCESS\_KEY.
+Add a masked variable into Gitlab with the key AWS\_SECRET\_ACCESS\_KEY.
 Get the value for **AWS\_SECRET\_ACCESS\_KEY** with the following command.
 > $ aws ssm get-parameter --name /entigo-infralib/dev-service-account-eu-north-1/secret_access_key --with-decryption --query Parameter.Value --output text --region eu-north-1
 

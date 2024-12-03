@@ -2,6 +2,9 @@
 
 
 ### 1) Install Entigo Training Application.
+
+Infralib is intended for infrastructure management, not end user applications. But in this lab we will install a taining application to demonstrate some features it has.
+
 Add a new application that is present in the <https://github.com/martivo/entigo-infralib-training> source.
 
 > $ diff ~/3/config_il.yaml ~/4/config_app.yaml
@@ -37,7 +40,7 @@ Use the aws cli to copy the generated code into the lab server.
 
 The application expects the database hostname and database name in the input. It will find the inputs automatically from the "aws/mariadb" Terraform module.
 
-The Infralib Agents reads the added file of the module <https://github.com/martivo/entigo-infralib-training/blob/v2.0.11/modules/k8s/training-application/agent_input_aws.yaml>.
+The Infralib Agents reads the added file of the module <https://github.com/martivo/entigo-infralib-training/blob/v2.0.30/modules/k8s/training-application/agent_input_aws.yaml>.
 
 You can see the literal values in the "sales-portal.yaml" file.
 > $ cat ~/lab_4.1/dev-apps/sales-portal.yaml |  grep --color=always -C 30 " host:\|       name:\| db:"
@@ -71,7 +74,7 @@ The "dev-net" step does not use modules from the new source that has updates, so
 
 The "dev-infra" step will only run once to make sure the code is in sync with the infrastructure. Later version changes of this update do not run the pipeline since the "aws/mariadb" modules checksum does not change.
 
-You will have to approve the "dev-apps" step for each version since it contains changes. <https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-apps/view?region=eu-north-1>
+The "dev-apps" step is approved automatically for each version. <https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-apps/view?region=eu-north-1>
 
 The version 2.0.31 contains a database schema update and a new "img" workload.
 Verify that the new bucket is created <https://eu-north-1.console.aws.amazon.com/s3/buckets?region=eu-north-1>
@@ -81,7 +84,7 @@ It is possible to make sure the api and form components are working before updat
 
 The version 2.0.33 updates the "web" workload to display the new UI for the users. 
 
-Try to use the application and add advertisements with pictures. <https://sales.dev.uN.entigo.dev> (Try reloading the page when the image upload is not visible.)
+After the update is finished try to use the application and add advertisements with pictures. <https://sales.dev.uN.entigo.dev> (Try reloading the page when the image upload is not visible.)
 
 
 Continue to Lab 5. <https://html.infralib.learn.entigo.io/5>

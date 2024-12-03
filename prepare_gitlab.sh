@@ -1,56 +1,56 @@
-#gitlab
-if [ "$1" != "" ]
-then
-    curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=DOCKER_REGISTRY" --form "value=registry.infralib.learn.entigo.io" --form "variable_type=env_var"
-    if [ $? -ne 0 ]
-    then
-    echo "Failed request"
-    exit 1
-    fi
-    curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=DOCKERHUB_PROXY" --form "value=registry.infralib.learn.entigo.io/hub/" --form "variable_type=env_var"
-    if [ $? -ne 0 ]
-    then
-    echo "Failed request"
-    exit 1
-    fi
-    curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=GHCR_PROXY" --form "value=registry.infralib.learn.entigo.io/ghcr/" --form "variable_type=env_var"
-    if [ $? -ne 0 ]
-    then
-    echo "Failed request"
-    exit 1
-    fi
-    curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=GCR_PROXY" --form "value=registry.infralib.learn.entigo.io/gcr/" --form "variable_type=env_var"
-    if [ $? -ne 0 ]
-    then
-    echo "Failed request"
-    exit 1
-    fi
-    curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=GITHUB_TOKEN" --form "value=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" --form "masked=true" --form "variable_type=env_var"
-    if [ $? -ne 0 ]
-    then
-    echo "Failed request"
-    exit 1
-    fi
-    
-    
-    curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=KUBERNETES_INGRESS_CLASS" --form "value=alb" --form "variable_type=env_var" --form "masked=false"
-    if [ $? -ne 0 ]
-    then
-    echo "Failed request"
-    exit 1
-    fi
-    RUNNER_TOKEN=`curl --header "PRIVATE-TOKEN: $1" -X POST "https://gitlab.infralib.learn.entigo.io/api/v4/user/runners" --data "runner_type=instance_type" --data "run_untagged=true" --data "access_level=not_protected" --data "description=k8s-runner" | jq -r .token`
-    echo "RUNNER_TOKEN $RUNNER_TOKEN"
-    helm repo add gitlab https://charts.gitlab.io
-    helm upgrade -i --namespace gitlab gitlab-runner -f gitlab-runner.yaml --set runnerToken=$RUNNER_TOKEN gitlab/gitlab-runner --version 0.68.1
-    if [ $? -ne 0 ]
-    then
-    echo "Failed helm install request"
-    exit 1
-    fi
-fi
+# #gitlab
+# if [ "$1" != "" ]
+# then
+#     curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=DOCKER_REGISTRY" --form "value=registry.infralib.learn.entigo.io" --form "variable_type=env_var"
+#     if [ $? -ne 0 ]
+#     then
+#     echo "Failed request"
+#     exit 1
+#     fi
+#     curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=DOCKERHUB_PROXY" --form "value=registry.infralib.learn.entigo.io/hub/" --form "variable_type=env_var"
+#     if [ $? -ne 0 ]
+#     then
+#     echo "Failed request"
+#     exit 1
+#     fi
+#     curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=GHCR_PROXY" --form "value=registry.infralib.learn.entigo.io/ghcr/" --form "variable_type=env_var"
+#     if [ $? -ne 0 ]
+#     then
+#     echo "Failed request"
+#     exit 1
+#     fi
+#     curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=GCR_PROXY" --form "value=registry.infralib.learn.entigo.io/gcr/" --form "variable_type=env_var"
+#     if [ $? -ne 0 ]
+#     then
+#     echo "Failed request"
+#     exit 1
+#     fi
+#     curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=GITHUB_TOKEN" --form "value=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" --form "masked=true" --form "variable_type=env_var"
+#     if [ $? -ne 0 ]
+#     then
+#     echo "Failed request"
+#     exit 1
+#     fi
+#     
+#     
+#     curl --header "PRIVATE-TOKEN: $1" -X POST  "https://gitlab.infralib.learn.entigo.io/api/v4/admin/ci/variables" --form "key=KUBERNETES_INGRESS_CLASS" --form "value=alb" --form "variable_type=env_var" --form "masked=false"
+#     if [ $? -ne 0 ]
+#     then
+#     echo "Failed request"
+#     exit 1
+#     fi
+#     RUNNER_TOKEN=`curl --header "PRIVATE-TOKEN: $1" -X POST "https://gitlab.infralib.learn.entigo.io/api/v4/user/runners" --data "runner_type=instance_type" --data "run_untagged=true" --data "access_level=not_protected" --data "description=k8s-runner" | jq -r .token`
+#     echo "RUNNER_TOKEN $RUNNER_TOKEN"
+#     helm repo add gitlab https://charts.gitlab.io
+#     helm upgrade -i --namespace gitlab gitlab-runner -f gitlab-runner.yaml --set runnerToken=$RUNNER_TOKEN gitlab/gitlab-runner --version 0.68.1
+#     if [ $? -ne 0 ]
+#     then
+#     echo "Failed helm install request"
+#     exit 1
+#     fi
+# fi
 
-export i=1
+export i=12
 
 while [ $i -le `cat current_students` ]
 do

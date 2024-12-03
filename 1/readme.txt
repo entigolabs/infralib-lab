@@ -119,7 +119,7 @@ Access the Terraform apply log by opening "View details" on the **Apply** stage.
 
 ![dev_net_apply_log.png](dev_net_apply_log.png)
 
-Once the network step is complete it will create similar pipelines for the **"infra"** and **"apps"** steps.
+Once the network step is complete the Infralib Agent will create similar pipelines for the **"infra"** and **"apps"** steps.
 
 The **"-destroy"** pipelines are there to be able to remove all the created resources. By default these pipelines are disabled to prevent accidental deletion of resources.
 
@@ -141,23 +141,35 @@ The generated infrastructure code is stored here, it also can be updated by the 
 
 Monitor the pipeline logs and explore the created resources (VPC, Certificate Manager, Route53, Elastic Kubernetes Service).
 
- **Please wait for the docker run command to finish executing before proceeding. It will take about 30 minutes total.**
+ **Please wait for the Infralib Agent "run" command in the terminal to finish executing before proceeding. It will take about 30 minutes total.**
 
-A VPC has been created <https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#vpcs:>
-
-Subnets for public, private and databases in two zones are created <https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#subnets:>
-
-A new zone **"dev.uN.entigo.dev"** was created with required NS records in it's parent zone <https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones?region=eu-north-1#>
-
-A wildcard certificates for the created zone are validated and ready for use <https://eu-north-1.console.aws.amazon.com/acm/home?region=eu-north-1#/certificates/list>
-
-The AWS EKS Kubernetes cluster is provisioned <https://eu-north-1.console.aws.amazon.com/eks/home?region=eu-north-1#>
+![agent_run_done.png](agent_run_done.png)
+ 
+![code_pipeline_done.png](code_pipeline_done.png)
+ 
+When everything is completed - the Infralib Agent has provisioned the infrastructure code and the infrastructure.
 
 The default naming scheme of the resources is **prefix - step name -  module name**. This makes it easy to track the created resources and find their configurations.
 
-The Infralib Agent has provisioned the infrastructure code and the infrastructure.
 
-To see the changes more conveniently use the aws cli to copy the generated code into the lab server. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.
+**A summary of the created resources:**
+
+A VPC called "dev-net-main". <https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#vpcs:>.
+
+Subnets for public, private and databases in two zones with the required routes and NAT gateways. <https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#subnets:>
+
+A new DNS zone for the domain **"dev.uN.entigo.dev"**.
+
+Added the DNS zone NS records into it's parent zone. <https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones?region=eu-north-1#>
+
+A wildcard certificate for the domain <https://eu-north-1.console.aws.amazon.com/acm/home?region=eu-north-1#/certificates/list>
+
+The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <https://eu-north-1.console.aws.amazon.com/eks/home?region=eu-north-1#>
+
+The essential integratsions are also installed into the Kubernetes cluster.
+
+
+To investigate the generated infrastructure code more conveniently use the aws cli to copy it to the lab server. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.
 > $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ~/lab_1
 
 Network step
@@ -173,27 +185,27 @@ Apps step
 
 ### 4) Get access to the AWS EKS cluster
 
-Configure the Kubernetes configuration context using the aws cli.
+Configure the "kubectl" context with aws cli to access the created Kubernetes cluster
 
 > $ aws eks update-kubeconfig --region $AWS_REGION --name dev-infra-eks
 
-Wait for the AWS ALB controller to be started.
+Some of the Kubernetes resources are still being created, use the following commands to make sure they are fully operational. The commands will output "Condition met" when the resources are ready for use.
+
+Wait for the AWS ALB controller to be started so Ingress objects can create AWS Application Load Balancers.
 > $ kubectl wait --for=create namespace/aws-alb-dev --timeout=300s
 > $ kubectl wait -n aws-alb-dev --for=create deploy/aws-alb-dev-aws-load-balancer-controller --timeout=300s
 > $ kubectl wait -n aws-alb-dev --for=condition=ready pod --selector=app.kubernetes.io/instance=aws-alb-dev --timeout=300s
 
-Wait for the External-dns integration to be started.
+Wait for the External-dns integration to be started so the DNS records for the Ingress objects can be created in AWS Route53.
 > $ kubectl wait --for=create namespace/external-dns-dev --timeout=300s
 > $ kubectl wait -n external-dns-dev --for=create deploy/external-dns-dev --timeout=300s
 > $ kubectl wait -n external-dns-dev --for=condition=ready pod --selector=app.kubernetes.io/instance=external-dns-dev --timeout=300s
 
-Wait for the ArgoCD Ingress Load Balancer to be provisioned.
+Wait for the ArgoCD Ingress Load Balancer to be provisioned to be able to access ArgoCD web interface.
 > $ kubectl wait --for=jsonpath='{.status.loadBalancer.ingress}' -n argocd  ingress/argocd-server --timeout=300s
 > $ aws elbv2 wait load-balancer-available --region $AWS_REGION --names $(kubectl get ingress -n argocd argocd-server -o json | jq -r .status.loadBalancer.ingress[0].hostname | cut -d"-" -f1-3)
 
-Find the ArgoCD Ingress object and its hostname to test access.
-> $ kubectl get ingress -n argocd 
-
+![kubectl.png](kubectl.png)
 
 ### 5) Get access to ArgoCD
 

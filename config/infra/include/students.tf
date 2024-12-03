@@ -1,7 +1,7 @@
 
 
 module "studenthosts" {
-  count = 3
+  count = 21
   source                 = "git::https://github.com/entigolabs/entigo-infralib-release.git//modules/aws/ec2?ref=v1.0.15"
   prefix                 = "infralib-infralib-u${count.index + 1}"
   route53_name           = "infralib-${count.index + 1}"

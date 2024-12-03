@@ -6,11 +6,18 @@ Delete all the AWS resources created and uninstall the Infralib Agent.
 
 Delete applications that create AWS resources.
 
-Delete sales-portal including the S3 images.
+Delete the uploaded advertisment images from the S3 bucket.
 > $ aws s3 rm --recursive s3://$(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name)
+> $ aws s3api delete-objects --bucket $(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name) --delete "$(aws s3api list-object-versions --bucket $(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name) --output json --query '{Objects: Versions[].{Key:Key,VersionId:VersionId} || DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
+
+Delete "sales-portal" application.
 > $ kubectl patch app sales-portal -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
 > $ kubectl delete app sales-portal -n argocd
 > $ kubectl delete ns sales-portal
+
+Remove all the Ingress and PV resources to delete any AWS Load Balancers and EBS volumes.
+> $ kubectl delete ingress -A --all
+> $ kubectl delete pv --all
 
 Delete external-secrets.
 > $ kubectl patch app external-secrets-dev -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
@@ -21,10 +28,6 @@ Delete external-dns.
 > $ kubectl patch app external-dns-dev -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
 > $ kubectl delete app external-dns-dev -n argocd
 > $ kubectl delete ns external-dns-dev
-
-Remove all the Ingress and PV resources to delete any AWS Load Balancers and EBS volumes.
-> $ kubectl delete ingress -A --all
-> $ kubectl delete pv --all
 
 Delete aws-alb
 > $ kubectl patch app aws-alb-dev -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
