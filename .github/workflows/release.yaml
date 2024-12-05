@@ -73,13 +73,14 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
-    - name: Tag correct version
+    - name: Build and push image
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd quickstart && 
-        docker buildx build --push --platform linux/arm64/v8,linux/amd64 -t entigolabs/entigo-infralib-quickstart:${{ steps.get_latest_release.outputs.new_version }} entigolabs/entigo-infralib-quickstart:latest .
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd quickstart/ && 
+        docker buildx build --push --platform linux/arm64/v8,linux/amd64 -t entigolabs/entigo-infralib-quickstart:latest -t entigolabs/entigo-infralib-quickstart:${{ steps.get_latest_release.outputs.new_version }} .
+       
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Create Release
