@@ -1,0 +1,64 @@
+sources:
+  - url: https://github.com/entigolabs/entigo-infralib-release
+prefix: dev
+steps:
+  - name: net
+    type: terraform
+    approve: major
+    modules:
+      - name: main
+        source: aws/vpc
+      - name: dns
+        source: aws/route53
+  - name: infra
+    type: terraform
+    approve: major
+    vpc:
+      attach: true
+    modules:
+      - name: eks
+        source: aws/eks
+        inputs:
+          eks_cluster_public: true
+          eks_main_min_size: 1
+          eks_main_max_size: 3
+          eks_main_volume_size: 100
+          eks_tools_desired_size: 1
+          eks_mon_max_size: 0
+          iam_admin_role: AWSReservedSSO_AWSAdministratorAccess
+          aws_auth_user: adminuser
+          cluster_enabled_log_types: |
+            []
+      - name: crossplane
+        source: aws/crossplane
+  - name: apps
+    type: argocd-apps
+    approve: major
+    modules:
+      - name: argocd
+        source: argocd
+        inputs:
+          argocd:
+            server:
+              ingress:
+                annotations:
+                  alb.ingress.kubernetes.io/group.name: external
+                  alb.ingress.kubernetes.io/scheme: internet-facing
+      - name: aws-alb-{{ .config.prefix }}
+        source: aws-alb
+      - name: crossplane-system
+        source: crossplane-core
+      - name: crossplane-aws
+        source: crossplane-aws
+      - name: external-dns-{{ .config.prefix }}
+        source: external-dns
+      - name: istio-base
+        source: istio-base
+      - name: istio-system
+        source: istio-istiod
+      - name: aws-storageclass
+        source: aws-storageclass
+      - name: metrics-server
+        source: metrics-server
+      - name: external-secrets-{{ .config.prefix }}
+        source: external-secrets
