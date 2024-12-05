@@ -77,7 +77,6 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        aws-region: us-east-1
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd quickstart && 
         docker buildx imagetools create -t entigolabs/entigo-infralib-quickstart:${{ steps.get_latest_release.outputs.new_version }} entigolabs/entigo-infralib-quickstart:latest
