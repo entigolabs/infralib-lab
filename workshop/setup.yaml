@@ -1,0 +1,150 @@
+sources:
+  - url: https://github.com/entigolabs/entigo-infralib-release
+    version: stable
+prefix: infralib
+steps:
+    - name: net
+      type: terraform
+      modules:
+        - name: main
+          source: aws/vpc
+          version: stable
+          inputs:
+            azs: 2
+            elasticache_subnets: |
+                []
+            enable_nat_gateway: true
+            one_nat_gateway_per_az: true
+            vpc_cidr: 10.83.0.0/16
+        - name: dns
+          source: aws/route53
+          version: stable
+          inputs:
+            create_private: false
+            create_public: true
+            parent_zone_id: Z0854848C083DV8BKUYJ
+            public_subdomain_name: "{{ .config.prefix }}"
+    - name: infra
+      type: terraform
+      vpc: 
+        attach: true
+      modules:
+        - name: eks
+          source: aws/eks
+          version: stable
+          inputs:
+            cluster_enabled_log_types: |
+                []
+            eks_api_access_cidrs: |
+                [{{ .ssm.net.main.private_subnet_cidrs }},{{ .ssm.net.main.public_subnet_cidrs }}]
+            eks_cluster_public: true
+            eks_db_max_size: 0
+            eks_main_max_size: 4
+            eks_main_desired_size: 2
+            eks_main_volume_size: 100
+            eks_main_instance_types: |
+              ["t3.large"]
+            eks_spot_max_size: 0
+            eks_tools_desired_size: 2
+            eks_tools_max_size: 4
+            eks_tools_single_subnet: true
+            eks_tools_volume_size: 100
+            eks_tools_instance_types: |
+              ["t3.xlarge"]
+            eks_mon_max_size: 0
+            private_subnets: |
+                [{{ .ssm.net.main.private_subnets }}]
+            public_subnets: |
+                [{{ .ssm.net.main.public_subnets }}]
+            vpc_id: '{{ .ssm.net.main.vpc_id }}'
+        - name: crossplane
+          source: aws/crossplane
+          version: stable
+          inputs:
+            eks_oidc_provider: |
+                module.eks.oidc_provider
+            eks_oidc_provider_arn: |
+                module.eks.oidc_provider_arn
+    - name: applications
+      type: argocd-apps
+      modules:
+        - name: argocd
+          source: argocd
+          version: stable
+          inputs:
+            argocd:
+              server:
+                ingress:
+                  annotations: 
+                    alb.ingress.kubernetes.io/group.name: external
+                    alb.ingress.kubernetes.io/scheme: internet-facing
+        - name: aws-alb-{{ .config.prefix }}
+          source: aws-alb
+          version: stable
+        - name: crossplane-system
+          source: crossplane-core
+          version: stable
+        - name: crossplane-aws
+          source: crossplane-aws
+          version: stable
+        - name: external-dns-{{ .config.prefix }}
+          source: external-dns
+          version: stable
+        - name: istio-base
+          source: istio-base
+          version: stable
+        - name: istio-system
+          source: istio-istiod
+          version: stable
+          inputs:
+            istiod:
+              global:
+                hub: registry.{{ ssm.net.dns.pub_domain }}/hub/istio
+              pilot:
+                traceSampling: 100
+        - name: aws-storageclass
+          source: aws-storageclass
+          version: stable
+        - name: metrics-server
+          source: metrics-server
+          version: stable
+        - name: external-secrets-{{ .config.prefix }}
+          source: external-secrets
+          version: stable
+        - name: harbor
+          source: harbor
+          version: stable
+          inputs:
+            global:
+              aws:
+                account: '{{ .ssm.infra.eks.account }}'
+                clusterOIDC: '{{ .ssm.infra.eks.oidc_provider }}'
+            harbor:
+              externalURL: https://registry.{{ ssm.net.dns.pub_domain }}
+              harborAdminPassword: Harbor12345
+              trivy:
+                resources:
+                  requests:
+                    cpu: 1000m
+                    memory: 512Mi
+                    ephemeral-storage: 128Mi
+                  limits:
+                    cpu: 4
+                    memory: 4Gi
+                    ephemeral-storage: 10Gi
+              expose:
+                ingress:
+                  hosts:
+                    core: registry.{{ ssm.net.dns.pub_domain }}
+
+              persistence:
+                persistentVolumeClaim:
+                  registry:
+                    size: 300Gi
+                  trivy:
+                    size: 50Gi
+                imageChartStorage:
+                  s3:
+                    region: "{{ .ssm.infra.eks.region }}"
+                    regionendpoint: "s3.{{ .ssm.infra.eks.region }}.amazonaws.com"
+                    bucket: entigo-training-{{ .config.prefix }}-harbor

@@ -1,0 +1,285 @@
+
+    <!doctype html><html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Infralib - Lab 1: Install the infrastructure</title>
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../main.css">
+        <script src="../highlight.pack.js"></script>
+        <script>hljs.highlightAll();</script>
+    </head>
+    <body>
+    <header>
+        <div>
+            <span>Infralib - Lab 1: Install the infrastructure</span>
+            <a href="https://www.entigo.com/" target="_blank"><img src="../logo.svg" alt="entigo-logo"/></a>
+        </div>
+    </header>
+    <div class="body"><p>Provision Kubernetes on AWS with integrations using the Infralib Agent. </p>
+<h3 id="1usesshtogainaccesstoyourlabenvironment">1) Use SSH to gain access to your lab environment.</h3>
+<p>Pretend that the lab server is a workstation to eliminate the need for participants to install any software or run commands on their personal computer.</p>
+<p>If You do not have a command-line ssh client You can use putty. Go to <a href="https://www.putty.org/">https://www.putty.org/</a> or download standalone binary <a href="https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe">https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe</a>.</p>
+<p>Remote host parameters:</p>
+<pre><code>Host: infralib-N.learn.entigo.io
+Port: 22 (default)
+Username: userN
+Password: KubeLabN
+</code></pre>
+<p>To connect to the host use this command:</p>
+<pre><code class="shell language-shell">$ ssh userN@infralib-N.learn.entigo.io
+</code></pre>
+<p>The password is written above.</p>
+<p>All of the upcoming commands are for executing on this remote server.</p>
+<h3 id="2clonethelabrepository">2) Clone the lab repository</h3>
+<p>Set the git configuration to the following:</p>
+<pre><code class="shell language-shell">$ git config --global user.email "userN@example.com"
+$ git config --global user.name "userN infralib-N"
+</code></pre>
+<p>Clone the <strong>"iac"</strong> repository that has been prepared for this lab.</p>
+<pre><code class="shell language-shell">$ git clone https://userN:KubeLabN@gitlab.infralib.learn.entigo.io/app-uN/iac.git
+</code></pre>
+<h3 id="3usetheinfralibagent">3) Use the Infralib Agent</h3>
+<p>Please set the AWS credentials that are used for this lab, these have been prepared in advance and placed in the aws-credentials file.</p>
+<pre><code class="shell language-shell">$ source ~/aws-credentials
+</code></pre>
+<p>To get the console URL use the following command.</p>
+<pre><code class="shell language-shell">$ echo "https://$AWS_ACCOUNT.signin.aws.amazon.com/console"
+</code></pre>
+<p>Please open the URL and test if the login works.</p>
+<p>Log into the AWS console using these credentials:</p>
+<pre><code>Username: adminuser
+Password: KubeLabN
+</code></pre>
+<p>Use the Infralib Agent <strong>"run"</strong> command to create the infrastructure code, deploy pipelines and create all the cloud resources.</p>
+<pre><code class="shell language-shell">$ cd ~/iac
+$ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
+</code></pre>
+<p>The console should display a similar log and the command will stay running for a while.  <strong>Please continue with the lab without waiting for this command to finish, but do not close or cancel it.</strong></p>
+<p><img src="dev_net_console.png" alt="dev_net_console.png" /></p>
+<p>The cloud resource provisioning takes a while. Use this time to study the configuration and observe the operation of the Infralib Agent.</p>
+<p>Click on the file names below to show the contents. It is the configuration file that the Infralib Agent "run" command was started with.</p>
+<p><details class="cmd-file"><summary>Show ~/iac/config.yaml <span class="show-text">&plus;</span></summary><pre><code class="yaml language-yaml">sources:
+  - url: https://github.com/entigolabs/entigo-infralib-release
+prefix: dev
+steps:
+  - name: net
+    type: terraform
+    approve: major
+    modules:
+      - name: main
+        source: aws/vpc
+      - name: dns
+        source: aws/route53
+  - name: infra
+    type: terraform
+    approve: major
+    vpc:
+      attach: true
+    modules:
+      - name: eks
+        source: aws/eks
+        inputs:
+          eks_cluster_public: true
+          eks_main_min_size: 1
+          eks_main_max_size: 3
+          eks_main_volume_size: 100
+          eks_tools_desired_size: 1
+          eks_mon_max_size: 0
+          iam_admin_role: AWSReservedSSO_AWSAdministratorAccess
+          aws_auth_user: adminuser
+          cluster_enabled_log_types: |
+            []
+      - name: crossplane
+        source: aws/crossplane
+  - name: apps
+    type: argocd-apps
+    approve: major
+    modules:
+      - name: argocd
+        source: argocd
+        inputs:
+          argocd:
+            server:
+              ingress:
+                annotations:
+                  alb.ingress.kubernetes.io/group.name: external
+                  alb.ingress.kubernetes.io/scheme: internet-facing
+      - name: aws-alb-{{ .config.prefix }}
+        source: aws-alb
+      - name: crossplane-system
+        source: crossplane-core
+      - name: crossplane-aws
+        source: crossplane-aws
+      - name: external-dns-{{ .config.prefix }}
+        source: external-dns
+      - name: istio-base
+        source: istio-base
+      - name: istio-system
+        source: istio-istiod
+      - name: aws-storageclass
+        source: aws-storageclass
+      - name: metrics-server
+        source: metrics-server
+      - name: external-secrets-{{ .config.prefix }}
+        source: external-secrets
+
+</code></pre>
+</details></p>
+<p>Currently it has only one source - all the modules will originate from <a href="https://github.com/entigolabs/entigo-infralib-release">https://github.com/entigolabs/entigo-infralib-release</a>.</p>
+<p>This Infralib Agent configuration has three steps - <strong>net, infra and apps</strong>. The amount of steps and how they are named is up to the user to decide. However this is a commonly used configuration.</p>
+<p><img src="agent.webp" alt="agent.webp" /></p>
+<p><strong>Step: net</strong></p>
+<p>The VPC, subnets, routings and nat gateways are created using the "aws/vpc" module. And it is called the "main" network.</p>
+<p>The "aws/route53" module is named as "dns". It creates a public DNS zone using route53 and the TLS certificate for it using Certificate Manager.</p>
+<p>The "dns" and "vpc" configurations are placed in separate files to make the configuration easier to read and manage. </p>
+<p><details class="cmd-file"><summary>Show ~/iac/config/net/main.yaml <span class="show-text">&plus;</span></summary><pre><code class="yaml language-yaml">vpc_cidr: 10.112.0.0/16
+one_nat_gateway_per_az: false
+elasticache_subnets: |
+            []
+intra_subnets: |
+            []
+
+</code></pre>
+</details></p>
+<p><details class="cmd-file"><summary>Show ~/iac/config/net/dns.yaml <span class="show-text">&plus;</span></summary><pre><code class="yaml language-yaml">create_private: false
+create_public: true
+parent_zone_id: REPLACEME
+public_subdomain_name: "{{ .config.prefix }}"
+
+</code></pre>
+</details></p>
+<p><strong>Step: infra</strong></p>
+<p>This step is running in the private subnet that we created in the "net" step due to the "<strong>vps.attach</strong>" configuration. </p>
+<p>This enables Terraform to communicate with the resources in the private subnets - even when the Infralib Agent is run externally.</p>
+<p>The "aws/eks" module will provision a Kubernetes cluster with nodegroups. Here the <strong>"inputs"</strong> block is used to configure the module, unlike in the "net" step.</p>
+<p>For the lab purpose the cluster is made available on the public network - the <strong>eks_cluster_public: true</strong> boolean changes it from the default value of false.</p>
+<p>The "aws/crossplane" module creates needed permissions for the AWS Crossplane provider so we can create AWS resources using Kubernetes manifests.</p>
+<p><strong>Step: apps</strong></p>
+<p>In this step we install the much needed integrations into the Kubernetes cluster using ArgoCD.</p>
+<p>The "argocd" applications ingress annotations are changed for the lab purpose from the defaults. It is made available on the public network.<br/><br/></p>
+<p>Find the CodePipeline job for the "net" step. <a href="https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=eu-north-1">https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=eu-north-1</a></p>
+<p><img src="dev_net_plan.png" alt="dev_net_plan.png" /></p>
+<p>Click on the pipeline <strong>"dev-net"</strong> to see the pipeline Source, Plan, Approve and Apply stages.</p>
+<p><img src="dev_net_plan_details.png" alt="dev_net_plan_details.png" /></p>
+<p>Open the "View details" on the <strong>Plan</strong> stage to see the Terraform plan for this step.</p>
+<p><img src="dev_net_plan_log.png" alt="dev_net_plan_log.png" /></p>
+<p>The Terraform plan only intends to create resources, as a result <strong>the Infralib Agent will approve it automatically</strong>.</p>
+<p><img src="dev_net_apply.png" alt="dev_net_apply.png" /></p>
+<p>Access the Terraform apply log by opening "View details" on the <strong>Apply</strong> stage.</p>
+<p><img src="dev_net_apply_log.png" alt="dev_net_apply_log.png" /></p>
+<p>Once the network step is complete the Infralib Agent will create similar pipelines for the <strong>"infra"</strong> and <strong>"apps"</strong> steps.</p>
+<p>The <strong>"-destroy"</strong> pipelines are there to be able to remove all the created resources. By default these pipelines are disabled to prevent accidental deletion of resources.</p>
+<p>The generated infrastructure code has been placed into a S3 bucket. </p>
+<p>Navigate the S3 service. <a href="https://eu-north-1.console.aws.amazon.com/s3/buckets?region=eu-north-1">https://eu-north-1.console.aws.amazon.com/s3/buckets?region=eu-north-1</a></p>
+<p>Open the only bucket starting with the "dev" word and followed by account number and region.</p>
+<p><img src="dev_net_s3.png" alt="dev_net_s3.png" /></p>
+<p>The generated infrastructure code is placed in the <strong>"steps"</strong> folder and each step has its own sub folder.</p>
+<p><img src="dev_net_s3_steps.png" alt="dev_net_s3_steps.png" /></p>
+<p>The generated infrastructure code is stored here, it also can be updated by the Infralib Agent.</p>
+<p><img src="dev_net_s3_code.png" alt="dev_net_s3_code.png" /></p>
+<p>Monitor the pipeline logs and explore the created resources (VPC, Certificate Manager, Route53, Elastic Kubernetes Service).</p>
+<p><strong>Please wait for the Infralib Agent "run" command in the terminal to finish executing before proceeding. It will take about 30 minutes total.</strong></p>
+<p><img src="agent_run_done.png" alt="agent_run_done.png" /></p>
+<p><img src="code_pipeline_done.png" alt="code_pipeline_done.png" /></p>
+<p>When everything is completed - the Infralib Agent has provisioned the infrastructure code and the infrastructure.</p>
+<p>The default naming scheme of the resources is <strong>prefix - step name -  module name</strong>. This makes it easy to track the created resources and find their configurations.</p>
+<p><strong>A summary of the created resources:</strong></p>
+<p>A VPC called "dev-net-main". <a href="https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#vpcs:">https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#vpcs:</a>.</p>
+<p>Subnets for public, private and databases in two zones with the required routes and NAT gateways. <a href="https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#subnets:">https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#subnets:</a></p>
+<p>A new DNS zone for the domain <strong>"dev.uN.entigo.dev"</strong>.</p>
+<p>Added the DNS zone NS records into it's parent zone. <a href="https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones?region=eu-north-1#">https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones?region=eu-north-1#</a></p>
+<p>A wildcard certificate for the domain <a href="https://eu-north-1.console.aws.amazon.com/acm/home?region=eu-north-1#/certificates/list">https://eu-north-1.console.aws.amazon.com/acm/home?region=eu-north-1#/certificates/list</a></p>
+<p>The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <a href="https://eu-north-1.console.aws.amazon.com/eks/home?region=eu-north-1#">https://eu-north-1.console.aws.amazon.com/eks/home?region=eu-north-1#</a></p>
+<p>The essential integratsions are also installed into the Kubernetes cluster.</p>
+<p>To investigate the generated infrastructure code more conveniently use the aws cli to copy it to the lab server. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.</p>
+<pre><code class="shell language-shell">$ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ~/lab_1
+</code></pre>
+<p>Network step</p>
+<pre><code class="shell language-shell">$ ls -l ~/lab_1/dev-net/
+$ cat ~/lab_1/dev-net/main.tf
+</code></pre>
+<p>Infra step</p>
+<pre><code class="shell language-shell">$ ls -l ~/lab_1/dev-infra/
+$ cat ~/lab_1/dev-infra/main.tf
+</code></pre>
+<p>Apps step</p>
+<pre><code class="shell language-shell">$ ls -l ~/lab_1/dev-apps/
+$ cat ~/lab_1/dev-apps/external-dns-dev.yaml
+</code></pre>
+<h3 id="4getaccesstotheawsekscluster">4) Get access to the AWS EKS cluster</h3>
+<p>Configure the "kubectl" context with aws cli to access the created Kubernetes cluster</p>
+<pre><code class="shell language-shell">$ aws eks update-kubeconfig --region $AWS_REGION --name dev-infra-eks
+</code></pre>
+<p>Some of the Kubernetes resources are still being created, use the following commands to make sure they are fully operational. The commands will output "Condition met" when the resources are ready for use.</p>
+<p>Wait for the AWS ALB controller to be started so Ingress objects can create AWS Application Load Balancers.</p>
+<pre><code class="shell language-shell">$ kubectl wait --for=create namespace/aws-alb-dev --timeout=300s
+$ kubectl wait -n aws-alb-dev --for=create deploy/aws-alb-dev-aws-load-balancer-controller --timeout=300s
+$ kubectl wait -n aws-alb-dev --for=condition=ready pod --selector=app.kubernetes.io/instance=aws-alb-dev --timeout=300s
+</code></pre>
+<p>Wait for the External-dns integration to be started so the DNS records for the Ingress objects can be created in AWS Route53.</p>
+<pre><code class="shell language-shell">$ kubectl wait --for=create namespace/external-dns-dev --timeout=300s
+$ kubectl wait -n external-dns-dev --for=create deploy/external-dns-dev --timeout=300s
+$ kubectl wait -n external-dns-dev --for=condition=ready pod --selector=app.kubernetes.io/instance=external-dns-dev --timeout=300s
+</code></pre>
+<p>Wait for the ArgoCD Ingress Load Balancer to be provisioned to be able to access ArgoCD web interface.</p>
+<pre><code class="shell language-shell">$ kubectl wait --for=jsonpath='{.status.loadBalancer.ingress}' -n argocd  ingress/argocd-server --timeout=300s
+$ aws elbv2 wait load-balancer-available --region $AWS_REGION --names $(kubectl get ingress -n argocd argocd-server -o json | jq -r .status.loadBalancer.ingress[0].hostname | cut -d"-" -f1-3)
+</code></pre>
+<p><img src="kubectl.png" alt="kubectl.png" /></p>
+<h3 id="5getaccesstoargocd">5) Get access to ArgoCD</h3>
+<p>Fetch the generated ArgoCD admin password and log in to the web interface.</p>
+<pre><code class="shell language-shell">$ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d | xargs echo
+</code></pre>
+<p>Go to <a href="https://argocd.dev.uN.entigo.dev">https://argocd.dev.uN.entigo.dev</a>. The username is "admin" and the password is in the output of the previous command.</p>
+<p>Notice that in ArgoCD all the needed integrations are already installed as requested in the configuration.</p>
+<p>ArgoCD web UI also relies on multiple integrations itself:</p>
+<p>"aws/route53" - for DNS zone and TLS Certificates.</p>
+<p>"k8s/aws-alb" - To create Application Load Balancer in AWS for Ingress object.</p>
+<p>"k8s/external-dns" - create the required DNS record for Ingress object.</p>
+<p><img src="dev_argocd.png" alt="dev_argocd.png" /></p>
+<p>Open the <strong>"external-dns-dev"</strong> ArgoCD application and see that the AWS IAM resources are also created. This confirms the AWS Crossplane provider is operational too.</p>
+<p><img src="dev_argocd_external_dns.png" alt="dev_argocd_external_dns.png" /></p>
+<p>The created role and policy can be seen in the AWS Console under IAM and roles. <a href="https://us-east-1.console.aws.amazon.com/iam/home?region=eu-north-1#/roles">https://us-east-1.console.aws.amazon.com/iam/home?region=eu-north-1#/roles</a></p>
+<p><img src="dev_iam.png" alt="dev_iam.png" /></p>
+<p>Continue to Lab 2. <a href="https://html.infralib.learn.entigo.io/2">https://html.infralib.learn.entigo.io/2</a></p>
+    <h3>Feedback</h3>
+    <form id="feedbackForm">
+        <label for="lab_nr" style="display: none">Lab nr<span class="important">*</span></label>
+        <input type="number" id="lab_nr" name="lab_nr" required value="1" style="display: none"/>
+        <p>Please evaluate this lab on a scale of 1 to 5 stars, where 1 signifies the worst and 5 signifies excellence.</p>
+        <div class="ratings">
+            <label for="overall">Overall<span class="important">*</span></label>
+            <div class="star-rating" data-category="overall">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="overall" id="overallRating" value="0">
+            <label for="difficulty">Clarity and comprehensibility<span class="important">*</span></label>
+            <div class="star-rating" data-category="difficulty">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="difficulty" id="difficultyRating" value="0">
+            <label for="usefulness">Usefulness for me<span class="important">*</span></label>
+            <div class="star-rating" data-category="usefulness">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="usefulness" id="usefulnessRating" value="0">
+        </div>
+        <label for="comment">Comment or recommendation</label><br />
+        <textarea id="comment" name="comment" rows="4" cols="50"></textarea><br />
+        <p id="error" class="important" style="display: none"></p>
+        <p id="success" class="success" style="display: none">Thank you for your feedback!</p>
+        <input type="submit" value="Submit" id="submit">
+    </form>
+    </div><script src="../main.js"></script></body></html>

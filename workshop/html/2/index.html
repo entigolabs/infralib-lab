@@ -1,0 +1,135 @@
+
+    <!doctype html><html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Infralib - Lab 2: Infralib Agent bootstrap and deploy pipelines</title>
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../main.css">
+        <script src="../highlight.pack.js"></script>
+        <script>hljs.highlightAll();</script>
+    </head>
+    <body>
+    <header>
+        <div>
+            <span>Infralib - Lab 2: Infralib Agent bootstrap and deploy pipelines</span>
+            <a href="https://www.entigo.com/" target="_blank"><img src="../logo.svg" alt="entigo-logo"/></a>
+        </div>
+    </header>
+    <div class="body"><p>Run the Infrlaib Agent using Git as the source and create an alternative solution when the Git repository is not working.</p>
+<h3 id="1runtheinfralibagentinthegitlabpipeline">1) Run the Infralib Agent in the Gitlab pipeline</h3>
+<p>To keep track of changes over time use a Git repository. </p>
+<p>When multiple people are editing the configuration then these changes should be applied the same way and without conflicts.</p>
+<p>Usually the Infralib Agent itself is executed by a pipeline. Use Gitlab to try it out.</p>
+<p><img src="agent_1.png" alt="agent_1.png" /></p>
+<p>The Gitlab pipeline needs credentials. The Infralib Agent can create needed credentials with the <strong>"service-account"</strong> command option. </p>
+<pre><code class="shell language-shell">$ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent service-account  -c /conf/config.yaml
+</code></pre>
+<p>Log in to Gitlab <a href="https://gitlab.infralib.learn.entigo.io/app-uN/iac/">https://gitlab.infralib.learn.entigo.io/app-uN/iac/</a>.</p>
+<p>Login using these credentials:</p>
+<pre><code>Username: userN
+Password: KubeLabN
+</code></pre>
+<p>Navigate to the "iac" repository <strong>Settings->CI/CD</strong> or use the following link <a href="https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/settings/ci_cd">https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/settings/ci_cd</a>.</p>
+<p>Expand "Variables" then click on "Add variable".</p>
+<p><img src="gitlab_expand.png" alt="gitlab_expand.png" /></p>
+<p>Add a masked variable into Gitlab with the key AWS_ACCESS_KEY_ID.
+The credentials were saved in AWS SSM. Get the value for <strong>AWS_ACCESS_KEY_ID</strong> with the following command.</p>
+<pre><code class="shell language-shell">$ aws ssm get-parameter --name /entigo-infralib/dev-service-account-eu-north-1/access_key_id --with-decryption --query Parameter.Value --output text --region eu-north-1
+</code></pre>
+<p>Add a masked variable into Gitlab with the key AWS_SECRET_ACCESS_KEY.
+Get the value for <strong>AWS_SECRET_ACCESS_KEY</strong> with the following command.</p>
+<pre><code class="shell language-shell">$ aws ssm get-parameter --name /entigo-infralib/dev-service-account-eu-north-1/secret_access_key --with-decryption --query Parameter.Value --output text --region eu-north-1
+</code></pre>
+<p><img src="gitlab_add.png" alt="gitlab_add.png" /></p>
+<p>The <strong>"Variables"</strong> view should be as in the picture below.</p>
+<p><img src="gitlab_variables_done.png" alt="gitlab_variables_done.png" /></p>
+<p>A pipeline configuration is needed to run the Infralib Agent in Gitlab.</p>
+<p><details class="cmd-file"><summary>Show ~/2/gitlab-ci.yml <span class="show-text">&plus;</span></summary><pre><code class="yml language-yml">image: ${DOCKERHUB_PROXY}entigolabs/entigo-infralib-agent:latest
+
+workflow:
+  rules:
+    - when: always
+
+stages:
+  - build
+
+dev:
+  stage: build
+  resource_group: build
+  variables:
+    AWS_REGION: "eu-north-1"
+
+  script:
+    - ei-agent run -c $CI_PROJECT_DIR/config.yaml
+
+</code></pre>
+</details></p>
+<p>Copy the pipeline file for Gitlab and commit changes to git.</p>
+<pre><code class="shell language-shell">$ cp ~/2/gitlab-ci.yml ~/iac/.gitlab-ci.yml
+$ git add --all
+$ git commit -a -m"Add pipeline"
+$ git push
+</code></pre>
+<p>To see the pipeline execution in Gitlab go to  <a href="https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/pipelines">https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/pipelines</a></p>
+<p><img src="gitlab_pipeline.png" alt="gitlab_pipeline.png" /></p>
+<p><img src="gitlab_log.png" alt="gitlab_log.png" /></p>
+<p>The Infralib Agent now executes the steps in parallel. </p>
+<p><img src="gitlab_detailedlog.png" alt="gitlab_detailedlog.png" /></p>
+<p><strong>Wait for the pipeline to finish before proceeding.</strong></p>
+<h3 id="2bootstraptheinfralibagent">2) Bootstrap the Infralib Agent</h3>
+<p>When the Git service runs on the infrastructure that is managed by Infralib Agent, then an outage could prevent the execution of the infrastructure pipelines. </p>
+<p>Bootstrap the Infralib Agent itself into the cloud so it can be used without a workstation or Git service. This method can also be used if the project does not have a Git service at all.</p>
+<p><img src="agent_2.png" alt="agent_2.png" /></p>
+<p>Use the <strong>"bootstrap"</strong> command instead of the <strong>"run"</strong> command.</p>
+<pre><code class="shell language-shell">$ cd ~/iac
+$ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent bootstrap  -c /conf/config.yaml
+</code></pre>
+<p>The bootstrap also starts the "run" command of the Infralib Agent in the cloud.</p>
+<p>Now it is possible to run the pipelines and the Infralib Agent using only the cloud provider services. <a href="https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=eu-north-1">https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=eu-north-1</a></p>
+<p><img src="agent_bootstrap.png" alt="agent_bootstrap.png" /></p>
+<p>The Infralib Agent log can be observed from the <strong>"agent-run"</strong> pipeline by using the "View details" of the "AgentRun" stage.</p>
+<p>To update the Infralib modules, the <strong>"agent-update"</strong> pipeline can be used. At the moment there are no updates to be applied.</p>
+<p>The <strong>"config"</strong> folder and file are also synced to the Object Storage bucket. The bucket has versioning enabled, so there is also a version history of the configuration.</p>
+<p><img src="s3_files.png" alt="s3_files.png" /></p>
+<p>Continue to Lab 3. <a href="https://html.infralib.learn.entigo.io/3">https://html.infralib.learn.entigo.io/3</a></p>
+    <h3>Feedback</h3>
+    <form id="feedbackForm">
+        <label for="lab_nr" style="display: none">Lab nr<span class="important">*</span></label>
+        <input type="number" id="lab_nr" name="lab_nr" required value="2" style="display: none"/>
+        <p>Please evaluate this lab on a scale of 1 to 5 stars, where 1 signifies the worst and 5 signifies excellence.</p>
+        <div class="ratings">
+            <label for="overall">Overall<span class="important">*</span></label>
+            <div class="star-rating" data-category="overall">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="overall" id="overallRating" value="0">
+            <label for="difficulty">Clarity and comprehensibility<span class="important">*</span></label>
+            <div class="star-rating" data-category="difficulty">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="difficulty" id="difficultyRating" value="0">
+            <label for="usefulness">Usefulness for me<span class="important">*</span></label>
+            <div class="star-rating" data-category="usefulness">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="usefulness" id="usefulnessRating" value="0">
+        </div>
+        <label for="comment">Comment or recommendation</label><br />
+        <textarea id="comment" name="comment" rows="4" cols="50"></textarea><br />
+        <p id="error" class="important" style="display: none"></p>
+        <p id="success" class="success" style="display: none">Thank you for your feedback!</p>
+        <input type="submit" value="Submit" id="submit">
+    </form>
+    </div><script src="../main.js"></script></body></html>

@@ -1,6 +1,0 @@
-vpc_cidr: 10.112.0.0/16
-one_nat_gateway_per_az: false
-elasticache_subnets: |
-            []
-intra_subnets: |
-            []

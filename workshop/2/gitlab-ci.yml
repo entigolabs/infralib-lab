@@ -1,0 +1,17 @@
+image: ${DOCKERHUB_PROXY}entigolabs/entigo-infralib-agent:latest
+
+workflow:
+  rules:
+    - when: always
+
+stages:
+  - build
+    
+dev:
+  stage: build
+  resource_group: build
+  variables:
+    AWS_REGION: "eu-north-1"
+    
+  script:
+    - ei-agent run -c $CI_PROJECT_DIR/config.yaml

@@ -1,0 +1,267 @@
+
+    <!doctype html><html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Infralib - Lab 4: New application and updates</title>
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../main.css">
+        <script src="../highlight.pack.js"></script>
+        <script>hljs.highlightAll();</script>
+    </head>
+    <body>
+    <header>
+        <div>
+            <span>Infralib - Lab 4: New application and updates</span>
+            <a href="https://www.entigo.com/" target="_blank"><img src="../logo.svg" alt="entigo-logo"/></a>
+        </div>
+    </header>
+    <div class="body"><h3 id="1installentigotrainingapplication">1) Install Entigo Training Application.</h3>
+<p>Infralib is intended for infrastructure management, not end user applications. But in this lab we will install a taining application to demonstrate some features it has.</p>
+<p>Add a new application that is present in the <a href="https://github.com/martivo/entigo-infralib-training">https://github.com/martivo/entigo-infralib-training</a> source.</p>
+<p><details class="cmd-file"><summary>Show diff ~/3/config_il.yaml ~/4/config_app.yaml <span class="show-text">&plus;</span></summary><pre><code class="diff language-diff"> sources:
+   - url: https://github.com/entigolabs/entigo-infralib-release
+   - url: https://github.com/martivo/entigo-infralib-training
+     version: 2.0.30
+ prefix: dev
+ steps:
+   - name: net
+     type: terraform
+     approve: major
+     modules:
+       - name: main
+         source: aws/vpc
+       - name: dns
+         source: aws/route53
+   - name: infra
+     type: terraform
+     approve: major
+     vpc:
+       attach: true
+     modules:
+       - name: eks
+         source: aws/eks
+         inputs:
+           eks_cluster_public: true
+           eks_main_min_size: 1
+           eks_main_max_size: 3
+           eks_main_volume_size: 100
+           eks_tools_desired_size: 1
+           eks_mon_max_size: 0
+           iam_admin_role: AWSReservedSSO_AWSAdministratorAccess
+           aws_auth_user: adminuser
+           cluster_enabled_log_types: |
+             []
+       - name: crossplane
+         source: aws/crossplane
+       - name: database
+         source: aws/mariadb
+         inputs:
+           allocated_storage: 21
+   - name: apps
+     type: argocd-apps
+     approve: major
+     modules:
+       - name: argocd
+         source: argocd
+         inputs:
+           argocd:
+             server:
+               ingress:
+                 annotations:
+                   alb.ingress.kubernetes.io/group.name: external
+                   alb.ingress.kubernetes.io/scheme: internet-facing
+       - name: aws-alb-{{ .config.prefix }}
+         source: aws-alb
+       - name: crossplane-system
+         source: crossplane-core
+       - name: crossplane-aws
+         source: crossplane-aws
+       - name: external-dns-{{ .config.prefix }}
+         source: external-dns
+       - name: istio-base
+         source: istio-base
+       - name: istio-system
+         source: istio-istiod
+       - name: aws-storageclass
+         source: aws-storageclass
+       - name: metrics-server
+         source: metrics-server
+       - name: external-secrets-{{ .config.prefix }}
+         source: external-secrets
+         inputs:
+           global:
+             createClusterSecretStore: true
++      - name: sales-portal
++        source: training-application
+
+</code></pre>
+</details></p>
+<p>Copy the updated configuration and commit changes to Git.</p>
+<pre><code class="shell language-shell">$ cp ~/4/config_app.yaml ~/iac/config.yaml
+$ cd ~/iac
+$ git commit -a -m"Instal the Entigo Training Application."
+$ git push
+</code></pre>
+<p>A pipeline in Gitlab has been triggered to apply the changes. <a href="https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/pipelines">https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/pipelines</a></p>
+<p>While the pipeline runs You can observe the application creation in ArgoCD. </p>
+<p>After the "dev-apps" steps "Plan" stage finishes the <strong>"sales-portal"</strong> application will appear in the ArgoCD. <a href="https://argocd.dev.uN.entigo.dev/applications">https://argocd.dev.uN.entigo.dev/applications</a></p>
+<p>When the "Apply" stage of the "dev-apps" step has not started, none of the resources have been created.</p>
+<p><img src="argocd_outofsync.png" alt="argocd_outofsync.png" /></p>
+<p>After the "Apply" stage starts the objects are being created.</p>
+<p><img src="argocd_syncing.png" alt="argocd_syncing.png" /></p>
+<p>Finally the object becomes healthy and the pipeline finishes.</p>
+<p><img src="argocd_healthy.png" alt="argocd_healthy.png" /></p>
+<p>Use the aws cli to copy the generated code into the lab server.</p>
+<pre><code class="shell language-shell">$ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ~/lab_4.1
+</code></pre>
+<p>The application expects the database hostname and database name in the input. It will find the inputs automatically from the "aws/mariadb" Terraform module.</p>
+<p>The Infralib Agents reads the added file of the module <a href="https://github.com/martivo/entigo-infralib-training/blob/v2.0.30/modules/k8s/training-application/agent_input_aws.yaml">https://github.com/martivo/entigo-infralib-training/blob/v2.0.30/modules/k8s/training-application/agent_input_aws.yaml</a>.</p>
+<p>You can see the literal values in the "sales-portal.yaml" file.</p>
+<pre><code class="shell language-shell">$ cat ~/lab_4.1/dev-apps/sales-portal.yaml |  grep --color=always -C 30 " host:\|       name:\| db:"
+</code></pre>
+<p>There are no passwords in the infrastructure code. The "aws/mariadb" Terraform module has saved the database username and password in the AWS SM.</p>
+<p>The application leverages External Secrets to get the password and username.</p>
+<pre><code class="shell language-shell">$ kubectl get externalsecrets -n sales-portal db -o json | jq .spec.data
+</code></pre>
+<p>The "ExternalSecrets" object creates the "Secret" object using the values from AWS SecretsManager. </p>
+<pre><code class="shell language-shell">$ kubectl get secret -n sales-portal db -o json | jq .data
+</code></pre>
+<p>Try to use the application by adding advertisements. <a href="https://sales.dev.uN.entigo.dev">https://sales.dev.uN.entigo.dev</a></p>
+<h3 id="2updatethetrainingapplicationmodules">2) Update the Training Application modules.</h3>
+<p>Update the training application to the latest version. The newest version comes with an image upload feature. For that an S3 bucket is used and a new workload is installed called "img".</p>
+<p>Remove the version lock from the source to enable update to a newer version.</p>
+<p><details class="cmd-file"><summary>Show diff ~/4/config_app.yaml ~/4/config_updates.yaml <span class="show-text">&plus;</span></summary><pre><code class="diff language-diff"> sources:
+   - url: https://github.com/entigolabs/entigo-infralib-release
+   - url: https://github.com/martivo/entigo-infralib-training
+-    version: 2.0.30
+ prefix: dev
+ steps:
+   - name: net
+     type: terraform
+     approve: major
+     modules:
+       - name: main
+         source: aws/vpc
+       - name: dns
+         source: aws/route53
+   - name: infra
+     type: terraform
+     approve: major
+     vpc:
+       attach: true
+     modules:
+       - name: eks
+         source: aws/eks
+         inputs:
+           eks_cluster_public: true
+           eks_main_min_size: 1
+           eks_main_max_size: 3
+           eks_main_volume_size: 100
+           eks_tools_desired_size: 1
+           eks_mon_max_size: 0
+           iam_admin_role: AWSReservedSSO_AWSAdministratorAccess
+           aws_auth_user: adminuser
+           cluster_enabled_log_types: |
+             []
+       - name: crossplane
+         source: aws/crossplane
+       - name: database
+         source: aws/mariadb
+         inputs:
+           allocated_storage: 21
+   - name: apps
+     type: argocd-apps
+     approve: major
+     modules:
+       - name: argocd
+         source: argocd
+         inputs:
+           argocd:
+             server:
+               ingress:
+                 annotations:
+                   alb.ingress.kubernetes.io/group.name: external
+                   alb.ingress.kubernetes.io/scheme: internet-facing
+       - name: aws-alb-{{ .config.prefix }}
+         source: aws-alb
+       - name: crossplane-system
+         source: crossplane-core
+       - name: crossplane-aws
+         source: crossplane-aws
+       - name: external-dns-{{ .config.prefix }}
+         source: external-dns
+       - name: istio-base
+         source: istio-base
+       - name: istio-system
+         source: istio-istiod
+       - name: aws-storageclass
+         source: aws-storageclass
+       - name: metrics-server
+         source: metrics-server
+       - name: external-secrets-{{ .config.prefix }}
+         source: external-secrets
+         inputs:
+           global:
+             createClusterSecretStore: true
+       - name: sales-portal
+         source: training-application
+
+
+</code></pre>
+</details></p>
+<p>Copy the updated configuration and use the Infralib Agent <strong>"update"</strong> command.</p>
+<pre><code class="shell language-shell">$ cp ~/4/config_updates.yaml ~/iac/config.yaml
+$ cd ~/iac
+$ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent update -c /conf/config.yaml
+</code></pre>
+<p>The "dev-net" step does not use modules from the new source that has updates, so the Infralib Agent will skip running it.</p>
+<p>The "dev-infra" step will only run once to make sure the code is in sync with the infrastructure. Later version changes of this update do not run the pipeline since the "aws/mariadb" modules checksum does not change.</p>
+<p>The "dev-apps" step is approved automatically for each version. <a href="https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-apps/view?region=eu-north-1">https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-apps/view?region=eu-north-1</a></p>
+<p>The version 2.0.31 contains a database schema update and a new "img" workload.
+Verify that the new bucket is created <a href="https://eu-north-1.console.aws.amazon.com/s3/buckets?region=eu-north-1">https://eu-north-1.console.aws.amazon.com/s3/buckets?region=eu-north-1</a></p>
+<p>The version 2.0.32 updates the "api" and "form" workloads to support the new feature.
+It is possible to make sure the api and form components are working before updating the user interface of the "web" component to allow for image uploads.</p>
+<p>The version 2.0.33 updates the "web" workload to display the new UI for the users. </p>
+<p>After the update is finished try to use the application and add advertisements with pictures. <a href="https://sales.dev.uN.entigo.dev">https://sales.dev.uN.entigo.dev</a> (Try reloading the page when the image upload is not visible.)</p>
+<p>Continue to Lab 5. <a href="https://html.infralib.learn.entigo.io/5">https://html.infralib.learn.entigo.io/5</a></p>
+    <h3>Feedback</h3>
+    <form id="feedbackForm">
+        <label for="lab_nr" style="display: none">Lab nr<span class="important">*</span></label>
+        <input type="number" id="lab_nr" name="lab_nr" required value="4" style="display: none"/>
+        <p>Please evaluate this lab on a scale of 1 to 5 stars, where 1 signifies the worst and 5 signifies excellence.</p>
+        <div class="ratings">
+            <label for="overall">Overall<span class="important">*</span></label>
+            <div class="star-rating" data-category="overall">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="overall" id="overallRating" value="0">
+            <label for="difficulty">Clarity and comprehensibility<span class="important">*</span></label>
+            <div class="star-rating" data-category="difficulty">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="difficulty" id="difficultyRating" value="0">
+            <label for="usefulness">Usefulness for me<span class="important">*</span></label>
+            <div class="star-rating" data-category="usefulness">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <input type="hidden" name="usefulness" id="usefulnessRating" value="0">
+        </div>
+        <label for="comment">Comment or recommendation</label><br />
+        <textarea id="comment" name="comment" rows="4" cols="50"></textarea><br />
+        <p id="error" class="important" style="display: none"></p>
+        <p id="success" class="success" style="display: none">Thank you for your feedback!</p>
+        <input type="submit" value="Submit" id="submit">
+    </form>
+    </div><script src="../main.js"></script></body></html>
