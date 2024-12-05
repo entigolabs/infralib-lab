@@ -79,7 +79,7 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd quickstart && 
-        docker buildx imagetools create -t entigolabs/entigo-infralib-quickstart:${{ steps.get_latest_release.outputs.new_version }} entigolabs/entigo-infralib-quickstart:latest
+        docker buildx build --push --platform linux/arm64/v8,linux/amd64 -t entigolabs/entigo-infralib-quickstart:${{ steps.get_latest_release.outputs.new_version }} entigolabs/entigo-infralib-quickstart:latest .
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Create Release
