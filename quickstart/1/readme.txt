@@ -20,8 +20,17 @@ Configure the route53 DNS zone to use. The example project will create sub domai
 Replace it in the infralib route53 configuration file.
 > $ sed -i "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
 
-Verify the zone is configured in the config/net/dns.yaml file.
+Verify the zone is configured in the config/net/dns.yaml file **parent\_zone\_id** field.
 > $ cat config/net/dns.yaml
+
+Configure a AWS Role or User to be an Administrator of EKS:
+
+Option 1: Configure AWS user.
+> $ echo "aws_auth_user: CHANGEME" >> config/infra/eks.yaml
+
+
+Option 2: Configure AWS Role
+> $ echo "iam_admin_role: CHANGEME" >> config/infra/eks.yaml
 
 
 ### 2) Use the Infralib Agent
@@ -32,7 +41,7 @@ Configure the AWS_REGION you want to use.
 Configure access credentials with Administrative privileges.
 > $ export AWS_ACCESS_KEY_ID="..."
 > $ export AWS_SECRET_ACCESS_KEY="..."
-Optionally you might have to set AWS_SESSION_TOKEN.
+(Optional) You might have to set AWS\_SESSION\_TOKEN if temporary tokens are used.
 > $ export AWS_SESSION_TOKEN="..."
 
 Use the Infralib Agent **"run"** command to create the infrastructure code, deploy pipelines and create all the cloud resources.
@@ -40,7 +49,7 @@ Use the Infralib Agent **"run"** command to create the infrastructure code, depl
 
 > $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
 
-The console should display a similar log and the command will stay running for a while.  **Please continue with the lab without waiting for this command to finish, but do not close or cancel it.**
+The console should display a similar log and the command will stay running for a while.  **Please continue with the quickstart without waiting for this command to finish, but do not close or cancel it.**
 
 ![dev_net_console.png](dev_net_console.png)
 
@@ -87,7 +96,7 @@ In this step we install the much needed integrations into the Kubernetes cluster
 
 The "argocd" applications ingress annotations are changed for the lab purpose from the defaults. It is made available on the public network.<br/><br/>
 
-Find the CodePipeline job for the "net" step. <https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines?region=eu-north-1>
+Find the CodePipeline job for the "net" step. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines>
 
 ![dev_net_plan.png](dev_net_plan.png)
 
@@ -113,7 +122,7 @@ The **"-destroy"** pipelines are there to be able to remove all the created reso
 
 The generated infrastructure code has been placed into a S3 bucket. 
 
-Navigate the S3 service. <https://eu-north-1.console.aws.amazon.com/s3/buckets?region=eu-north-1>
+Navigate the S3 service. <https://console.aws.amazon.com/s3/buckets>
 
 Open the only bucket starting with the "dev" word and followed by account number and region.
 
@@ -142,17 +151,17 @@ The default naming scheme of the resources is **prefix - step name -  module nam
 
 **A summary of the created resources:**
 
-A VPC called "dev-net-main". <https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#vpcs:>.
+A VPC called "dev-net-main". <https://console.aws.amazon.com/vpcconsole/home#vpcs:>.
 
-Subnets for public, private and databases in two zones with the required routes and NAT gateways. <https://eu-north-1.console.aws.amazon.com/vpcconsole/home?region=eu-north-1#subnets:>
+Subnets for public, private and databases in two zones with the required routes and NAT gateways. <https://console.aws.amazon.com/vpcconsole/home#subnets:>
 
-A new DNS zone for the domain **"dev.uN.entigo.dev"**.
+A new DNS zone for the domain **"dev.<Your parent zone>"**.
 
-Added the DNS zone NS records into it's parent zone. <https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones?region=eu-north-1#>
+Added the DNS zone NS records into it's parent zone. <https://console.aws.amazon.com/route53/v2/hostedzones#>
 
-A wildcard certificate for the domain <https://eu-north-1.console.aws.amazon.com/acm/home?region=eu-north-1#/certificates/list>
+A wildcard certificate for the domain <https://console.aws.amazon.com/acm/home#/certificates/list>
 
-The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <https://eu-north-1.console.aws.amazon.com/eks/home?region=eu-north-1#>
+The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <https://console.aws.amazon.com/eks/home#>
 
 The essential integratsions are also installed into the Kubernetes cluster.
 
@@ -219,7 +228,7 @@ Open the **"external-dns-dev"** ArgoCD application and see that the AWS IAM reso
 
 ![dev_argocd_external_dns.png](dev_argocd_external_dns.png)
 
-The created role and policy can be seen in the AWS Console under IAM and roles. <https://us-east-1.console.aws.amazon.com/iam/home?region=eu-north-1#/roles>
+The created role and policy can be seen in the AWS Console under IAM and roles. <https://console.aws.amazon.com/iam/home#/roles>
 
 ![dev_iam.png](dev_iam.png)
 
