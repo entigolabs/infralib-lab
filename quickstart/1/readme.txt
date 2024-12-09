@@ -232,5 +232,5 @@ The created role and policy can be seen in the AWS Console under IAM and roles. 
 
 ![dev_iam.png](dev_iam.png)
 
-Continue to Lab 2. <https://html.infralib.learn.entigo.io/2>
+Continue to "Bootrstap". <https://html.infralib.learn.entigo.io/2>
 
