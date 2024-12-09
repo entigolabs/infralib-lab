@@ -1,4 +1,4 @@
 create_private: false
 create_public: true
-parent_zone_id: Z10031012G9XVSKQ13R9D
+parent_zone_id: CHANGEME
 public_subdomain_name: "{{ .config.prefix }}"

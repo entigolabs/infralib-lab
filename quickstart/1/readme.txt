@@ -13,25 +13,27 @@ Go to the example project directory.
 
 Configure the route53 DNS zone to use. The example project will create sub domains into the existing route53 domain. The quickstart assumes the zone is present in the same account as we will run the infralib in.
 
+![route53_zone.png](route53_zone.png)
+
 > export AWS_ROUTE53_PARENT_ZONE="..."
 
 Replace it in the infralib route53 configuration file.
-> sed -i "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
+> $ sed -i "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
 
 Verify the zone is configured in the config/net/dns.yaml file.
-> cat config/net/dns.yaml
+> $ cat config/net/dns.yaml
 
 
 ### 2) Use the Infralib Agent
 
 Configure the AWS_REGION you want to use.
-> export AWS_REGION="eu-north-1"
+> $ export AWS_REGION="eu-north-1"
 
 Configure access credentials with Administrative privileges.
-> export AWS_ACCESS_KEY_ID="..."
-> export AWS_SECRET_ACCESS_KEY="..."
+> $ export AWS_ACCESS_KEY_ID="..."
+> $ export AWS_SECRET_ACCESS_KEY="..."
 Optionally you might have to set AWS_SESSION_TOKEN.
-> export AWS_SESSION_TOKEN="..."
+> $ export AWS_SESSION_TOKEN="..."
 
 Use the Infralib Agent **"run"** command to create the infrastructure code, deploy pipelines and create all the cloud resources.
 
