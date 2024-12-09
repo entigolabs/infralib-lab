@@ -1,55 +1,41 @@
-#Infralib - Lab 1: Install the infrastructure
+#Infralib - Quickstart
 
 Provision Kubernetes on AWS with integrations using the Infralib Agent. 
 
-### 1) Use SSH to gain access to your lab environment.
+### 1) Clone the example project and configure it
 
-Pretend that the lab server is a workstation to eliminate the need for participants to install any software or run commands on their personal computer.
+Clone the **"infralib-lab"** repository that contains the example project.
+> $ git clone --depth 1 --branch main https://github.com/entigolabs/infralib-lab.git
 
-If You do not have a command-line ssh client You can use putty. Go to <https://www.putty.org/> or download standalone binary <https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe>.
+Go to the example project directory.
+> $ cd infralib-lab/quickstart/iac
+> $ find .
 
-Remote host parameters:
-> Host: infralib-N.learn.entigo.io
-> Port: 22 (default)
-> Username: userN
-> Password: KubeLabN
+Configure the route53 DNS zone to use. The example project will create sub domains into the existing route53 domain. The quickstart assumes the zone is present in the same account as we will run the infralib in.
 
-To connect to the host use this command:
-> $ ssh userN@infralib-N.learn.entigo.io
+> export AWS_ROUTE53_PARENT_ZONE="..."
 
-The password is written above.
+Replace it in the infralib route53 configuration file.
+> sed -i "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
 
-All of the upcoming commands are for executing on this remote server.
-
-### 2) Clone the lab repository
-
-Set the git configuration to the following:
-> $ git config --global user.email "userN@example.com"
-> $ git config --global user.name "userN infralib-N"
-
-Clone the **"iac"** repository that has been prepared for this lab.
-
-> $ git clone https://userN:KubeLabN@gitlab.infralib.learn.entigo.io/app-uN/iac.git
-
-### 3) Use the Infralib Agent
-
-Please set the AWS credentials that are used for this lab, these have been prepared in advance and placed in the aws-credentials file.
-> $ source ~/aws-credentials
+Verify the zone is configured in the config/net/dns.yaml file.
+> cat config/net/dns.yaml
 
 
-To get the console URL use the following command.
-> $ echo "https://$AWS_ACCOUNT.signin.aws.amazon.com/console"
+### 2) Use the Infralib Agent
 
-Please open the URL and test if the login works.
+Configure the AWS_REGION you want to use.
+> export AWS_REGION="eu-north-1"
 
-Log into the AWS console using these credentials:
-> Username: adminuser
-> Password: KubeLabN
-
+Configure access credentials with Administrative privileges.
+> export AWS_ACCESS_KEY_ID="..."
+> export AWS_SECRET_ACCESS_KEY="..."
+Optionally you might have to set AWS_SESSION_TOKEN.
+> export AWS_SESSION_TOKEN="..."
 
 Use the Infralib Agent **"run"** command to create the infrastructure code, deploy pipelines and create all the cloud resources.
 
-> $ cd ~/iac
+
 > $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
 
 The console should display a similar log and the command will stay running for a while.  **Please continue with the lab without waiting for this command to finish, but do not close or cancel it.**
