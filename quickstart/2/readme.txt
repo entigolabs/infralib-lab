@@ -27,4 +27,4 @@ The **"config"** folder and file are also synced to the Object Storage bucket. T
 
 ![s3_files.png](s3_files.png)
 
-Continue to Lab 3. <https://html.infralib.learn.entigo.io/3>
+Continue to Lab 3. <https://infralib-quickstart.dev.entigo.dev/3>

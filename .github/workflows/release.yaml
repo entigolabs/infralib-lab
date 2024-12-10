@@ -78,7 +78,7 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd quickstart/ && find . && 
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd quickstart/ && 
         docker buildx build --push --platform linux/arm64/v8,linux/amd64 -t entigolabs/entigo-infralib-quickstart:latest -t entigolabs/entigo-infralib-quickstart:${{ steps.get_latest_release.outputs.new_version }} .
        
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}

@@ -11,7 +11,7 @@ Go to the example project directory.
 > $ cd infralib-lab/quickstart/iac
 > $ find .
 
-Configure the route53 DNS zone to use. The example project will create sub domains into the existing route53 domain. The quickstart assumes the zone is present in the same account as we will run the infralib in.
+Configure the route53 DNS zone to use. The example project will create sub domains into the existing route53 domain. The quickstart assumes the DNS zone is present in the same account.
 
 ![route53_zone.png](route53_zone.png)
 
@@ -29,7 +29,7 @@ Option 1: Configure AWS user.
 > $ echo "aws_auth_user: CHANGEME" >> config/infra/eks.yaml
 
 
-Option 2: Configure AWS Role
+Option 2: Configure AWS Role. (When using AWS SSO then the following wildcard value could be used AWSReservedSSO\_AWSAdministratorAccess\_.*)
 > $ echo "iam_admin_role: CHANGEME" >> config/infra/eks.yaml
 
 
@@ -83,7 +83,11 @@ This step is running in the private subnet that we created in the "net" step due
 
 This enables Terraform to communicate with the resources in the private subnets - even when the Infralib Agent is run externally.
 
-The "aws/eks" module will provision a Kubernetes cluster with nodegroups. Here the **"inputs"** block is used to configure the module, unlike in the "net" step.
+The "aws/eks" module will provision a Kubernetes cluster with nodegroups. 
+
+The "eks" configuration is are placed in separate file.
+> $ cat ~/iac/config/infra/eks.yaml
+
 
 For the lab purpose the cluster is made available on the public network - the **eks\_cluster\_public: true** boolean changes it from the default value of false.
 
@@ -94,7 +98,7 @@ The "aws/crossplane" module creates needed permissions for the AWS Crossplane pr
 
 In this step we install the much needed integrations into the Kubernetes cluster using ArgoCD.
 
-The "argocd" applications ingress annotations are changed for the lab purpose from the defaults. It is made available on the public network.<br/><br/>
+The "argocd" applications ingress annotations are changed for the lab purpose from the defaults. Here the **"inputs"** block is used to configure the module, unlike in the "net" or "infra" step. The configuration change makes ArgoCD available on the pulic network, the module defaults would not make it public.
 
 Find the CodePipeline job for the "net" step. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines>
 
@@ -132,7 +136,7 @@ The generated infrastructure code is placed in the **"steps"** folder and each s
 
 ![dev_net_s3_steps.png](dev_net_s3_steps.png)
 
-The generated infrastructure code is stored here, it also can be updated by the Infralib Agent.
+The generated infrastructure code is stored here. It is updated by the Infralib Agent during configuration changes or updates.
 
 ![dev_net_s3_code.png](dev_net_s3_code.png)
 
@@ -155,7 +159,7 @@ A VPC called "dev-net-main". <https://console.aws.amazon.com/vpcconsole/home#vpc
 
 Subnets for public, private and databases in two zones with the required routes and NAT gateways. <https://console.aws.amazon.com/vpcconsole/home#subnets:>
 
-A new DNS zone for the domain **"dev.<Your parent zone>"**.
+A new DNS zone for the domain **"dev.Your parent DNS zone"**.
 
 Added the DNS zone NS records into it's parent zone. <https://console.aws.amazon.com/route53/v2/hostedzones#>
 
@@ -166,18 +170,19 @@ The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <http
 The essential integratsions are also installed into the Kubernetes cluster.
 
 
-To investigate the generated infrastructure code more conveniently use the aws cli to copy it to the lab server. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.
-> $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ~/lab_1
+To investigate the generated infrastructure code more conveniently use the aws cli to copy it. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.
+> $ export AWS_ACCOUNT="..."
+> $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ./quickstart_s3
 
 Network step
-> $ ls -l ~/lab_1/dev-net/
-> $ cat ~/lab_1/dev-net/main.tf
+> $ ls -l ./quickstart_s3/dev-net/
+> $ cat ./quickstart_s3/dev-net/main.tf
 Infra step
-> $ ls -l ~/lab_1/dev-infra/
-> $ cat ~/lab_1/dev-infra/main.tf
+> $ ls -l ./quickstart_s3/dev-infra/
+> $ cat ./quickstart_s3/dev-infra/main.tf
 Apps step
-> $ ls -l ~/lab_1/dev-apps/
-> $ cat ~/lab_1/dev-apps/external-dns-dev.yaml
+> $ ls -l ./quickstart_s3/dev-apps/
+> $ cat ./quickstart_s3/dev-apps/external-dns-dev.yaml
 
 
 ### 4) Get access to the AWS EKS cluster
@@ -210,7 +215,10 @@ Fetch the generated ArgoCD admin password and log in to the web interface.
 
 > $ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d | xargs echo 
 
-Go to <https://argocd.dev.uN.entigo.dev>. The username is "admin" and the password is in the output of the previous command.
+Get the URL of ArgoCD
+> $ echo "https://$(kubectl -n argocd get ingress  argocd-server -o jsonpath='{.spec.rules[0].host}')"
+
+The username is "admin" and the password is in the output of the previous command.
 
 Notice that in ArgoCD all the needed integrations are already installed as requested in the configuration.
 
@@ -232,6 +240,6 @@ The created role and policy can be seen in the AWS Console under IAM and roles. 
 
 ![dev_iam.png](dev_iam.png)
 
-Continue to "Bootrstap". <https://html.infralib.learn.entigo.io/2>
+Continue to "Bootrstap". <https://infralib-quickstart.dev.entigo.dev/2>
 
 

@@ -5,5 +5,4 @@ docker run -d --rm --name kube-apps-html  kube-apps-lab-html:latest
 rm -rf html
 docker cp kube-apps-html:/usr/share/nginx/html ./ 
 docker rm -f kube-apps-html
-cp -r images/* html/
 
