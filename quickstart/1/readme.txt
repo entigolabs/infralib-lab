@@ -240,6 +240,8 @@ The created role and policy can be seen in the AWS Console under IAM and roles. 
 
 ![dev_iam.png](dev_iam.png)
 
-Continue to "Bootrstap". <https://infralib-quickstart.dev.entigo.dev/2>
+To dig deeper into Infralib and Infralib Agent continue to "Bootrstap". <https://infralib-quickstart.dev.entigo.dev/2>
+
+The weak can give up and go to "Delete created resources". <https://infralib-quickstart.dev.entigo.dev/4>
 
 

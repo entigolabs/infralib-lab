@@ -1,4 +1,4 @@
-#Infralib - Lab 3: Custom code and modules
+#Infralib - Dependency injection, Custom code and Change management
 
 In this lab custom Terraform code and modules are added to customize the existing project. Find out how Infralib Agent can help with module configuration and automatic approval.
 
@@ -38,79 +38,45 @@ The **".touput"** does not work when a module is called multiple times. Then all
 
 Copy the Terraform code to the **"include"** folder of the "infra" step.
 
-> $ mkdir -p ~/iac/config/infra/include
-> $ cp ~/3/securitygroups.tf ~/iac/config/infra/include
+> $ mkdir -p ./config/infra/include
+> $ cp ../3/securitygroups.tf ./config/infra/include/
+
+Run the infralib agent.
+> $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
+
+The "dev-infra" pipeline will now contain the custom Terraform code that was added and the Infralib Agent will approve the changes since we only add resources.
+
+> $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ./quickstart_s3_2
+
+> $ cat ./quickstart_s3_2/dev-infra/securitygroups.tf
 
 
-### 2) Use a Terraform module
+### 2) Use infralib module
 
-To reduce code repetitions Terraform modules can also be used.
-
-A module in the Github repository has been created for that purpose. <https://github.com/martivo/entigo-infralib-training/tree/main/modules/aws/mariadb>
-
-Compare the changes of the configuration.
-> $ diff ~/iac/config.yaml ~/3/config_module.yaml
-
-Copy the updated configuration and run the Infralib Agent.
-> $ cp ~/3/config_module.yaml ~/iac/config.yaml
-> $ cd ~/iac
-> $ git add --all
-> $ git commit -a -m"Create a database and Security Group."
-> $ git push
-
-A pipeline in Gitlab has been triggered to apply the changes. <https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/pipelines>
-
-![gitlab_add_resources.png](gitlab_add_resources.png)
-
-This time there are resource changes in the "dev-infra" pipeline. The agent will automatically approve it, because resources are only added.
-
-Wait for the pipeline to finish and verify that the RDS database, access credentials in Secrets Manager and Security Group was created.
-
-RDS <https://eu-north-1.console.aws.amazon.com/rds/home?region=eu-north-1#databases:> 
-
-Secrets Manager <https://eu-north-1.console.aws.amazon.com/secretsmanager/listsecrets?region=eu-north-1>
-
-Security Group (**"dev-developers"**) <https://eu-north-1.console.aws.amazon.com/ec2/home?region=eu-north-1#SecurityGroups:>
-
-Copy the generated code into the lab server again to see what changed.
-
-> $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ~/lab_3
-
-The "database" module  has been added to the "main.tf" file with the inputs filled. **All the inputs of the module had to be configured.**
-> $ cat ~/lab_3/dev-infra/main.tf
-And the custom SG code we used was copied to "securitygroups.tf" but with the literal values.
-> $ cat ~/lab_3/dev-infra/securitygroups.tf
-
-### 3) Use infralib module
-
-Using Infralib modules will automatically fill in the required inputs. 
-
-The database module that we used in the previous step is also an Infralib Module. Add the same module but as an Infralib Module.
+Add a new source that contains an Infralib database module. Using Infralib modules will automatically fill in the required inputs. 
 
 The creation of a "ClusterSecretStore" for the k8s/external-secrets module is also enabled. This will enable applications to access any secret in AWS SM using "ExternalSecrets".
 
-> $ diff ~/3/config_module.yaml ~/3/config_il.yaml
+> $ diff ~/iac/config.yaml ~/3/config_il.yaml
 
-All the modules from the new source are locked to a specific version. We want to perform an update later. Please notice in the comparison that we no longer have to define most of the inputs for the "database" module.
+Please notice in the comparison that we no longer have to define most of the inputs for the "database" module.
 
 
 Copy the updated configuration, remove the "securitygroups.tf" file and commit changes to Git.
-> $ cp ~/3/config_il.yaml ~/iac/config.yaml
-> $ cd ~/iac
-> $ rm ~/iac/config/infra/include/securitygroups.tf
-> $ git commit -a -m"Try to create the database from an infralib source.  Remove the SG."
-> $ git push
+> $ cp ../3/config_il.yaml ./config.yaml
+> $ rm ./config/infra/include/securitygroups.tf
 
-A pipeline in Gitlab has been triggered to apply the changes. <https://gitlab.infralib.learn.entigo.io/app-uN/iac/-/pipelines>
+Run the infralib agent.
+> $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
+
 
 **The "securitygroups.tf" file was removed.** This causes resource deletion and as a result the Infralib Agent will **NOT** automatically approve the "dev-infra" pipeline. 
-![gitlab_wait_for.png](gitlab_wait_for.png)
 
 The Infralib Agent can be configured to behave differently, but this is the default behaviour. This process works with Kubernetes objects too.
 
 ![agent_5.png](agent_5.png)
 
-Approve the change manually from the AWS Code Pipeline "dev-infra" pipeline. <https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-infra/view?region=eu-north-1>
+Approve the change manually from the AWS Code Pipeline "dev-infra" pipeline. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-infra/view>
 
 The details of the plan are visible in the "Plan" output of the pipeline. 
 
@@ -127,14 +93,14 @@ The Gitlab pipeline will finish once the "dev-infra" step Apply stage finishes.
 ![gitlab_done.png](gitlab_done.png)
 
 
-Verify that the **"dev-developers"** Security Group has been removed.  <https://eu-north-1.console.aws.amazon.com/ec2/home?region=eu-north-1#SecurityGroups:>
+Verify that the **"dev-developers"** Security Group has been removed.  <https://console.aws.amazon.com/ec2/home#SecurityGroups:>
 
 Use the aws cli to copy the generated code into the lab server.
 
-> $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ~/lab_3.3
+> $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ./quickstart_s3_3
 
 The module "database" has been added to the "main.tf" file with the inputs filled. **Only "allocated_storage: 21" was configured in the Infralib Agent configuration.**
-> $ cat ~/lab_3.3/dev-infra/main.tf
+> $ cat ./quickstart_s3_3/dev-infra/main.tf
 
 
-Continue to Lab 4. <https://html.infralib.learn.entigo.io/4>
+To clean up all the created resources go to "Delete created resources". <https://infralib-quickstart.dev.entigo.dev/4>

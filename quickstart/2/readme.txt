@@ -27,4 +27,7 @@ The **"config"** folder and file are also synced to the Object Storage bucket. T
 
 ![s3_files.png](s3_files.png)
 
-Continue to Lab 3. <https://infralib-quickstart.dev.entigo.dev/3>
+
+To dig deeper into Infralib and Infralib Agent continue to "Dependency injection, Custom code and modules". <https://infralib-quickstart.dev.entigo.dev/3>
+
+The weak can give up and go to "Delete created resources". <https://infralib-quickstart.dev.entigo.dev/4>

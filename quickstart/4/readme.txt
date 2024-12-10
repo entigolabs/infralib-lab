@@ -1,4 +1,4 @@
-#Infralib - Lab 5: Delete created resources
+#Infralib - Delete created resources
 
 Delete all the AWS resources created and uninstall the Infralib Agent.
 
