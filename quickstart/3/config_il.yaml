@@ -1,7 +1,7 @@
 sources:
   - url: https://github.com/entigolabs/entigo-infralib-release
   - url: https://github.com/martivo/entigo-infralib-training
-    version: 2.0.30
+    version: 2.0.34
 prefix: dev
 steps:
   - name: net
