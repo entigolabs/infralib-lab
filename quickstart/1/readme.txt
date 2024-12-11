@@ -28,27 +28,33 @@ Go to the example project directory.
 > $ cd infralib-lab/quickstart/iac
 > $ find .
 
-Configure the route53 DNS zone to use. The example project will create sub domains into the existing route53 domain. The quickstart assumes the DNS zone is present in the same account.
+Configure the Route53 DNS zone to use. The example project will create sub domains into the existing Route53 domain. The quickstart assumes the DNS zone is present in the same account.
 
 ![route53_zone.png](route53_zone.png)
 
 > export AWS_ROUTE53_PARENT_ZONE="..."
 
-Replace it in the infralib route53 configuration file.
+Configure it in the infralib Route53 configuration file under the "parent_zone_id" input variable.
 > $ sed -i "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
 
-Verify the zone is configured in the config/net/dns.yaml file **parent\_zone\_id** field.
+Verify the zone is configured in the "config/net/dns.yaml" file **"parent\_zone\_id"** field.
 > $ cat config/net/dns.yaml
 
-Configure a AWS Role or User to be an Administrator of EKS:
+Configure a AWS IAM Role or IAM User to be an Administrator of EKS:
 
-Option 1: Configure AWS user.
-> $ echo "aws_auth_user: CHANGEME" >> config/infra/eks.yaml
+Option 1: Configure AWS IAM User. Change the following command to your needs or skip it. Example value: john
+> $ echo "aws_auth_user: john" >> config/infra/eks.yaml
 
 
-Option 2: Configure AWS Role. When using AWS SSO then the following wildcard value could be used AWSReservedSSO\_AWSAdministratorAccess\_.*
-> $ echo "iam_admin_role: CHANGEME" >> config/infra/eks.yaml
+Option 2: Configure AWS Role. Change the following command to your needs or skip it. When using AWS SSO then the following wildcard value could be used AWSReservedSSO\_AWSAdministratorAccess\_.*
+> $ echo "iam_admin_role: AWSReservedSSO_AWSAdministratorAccess_.*" >> config/infra/eks.yaml
 
+Verify that either **"aws\_auth\_user"** or/and **"iam\_admin\_role"** is/are configured in the "config/infra/eks.yaml" file.
+> $ cat config/infra/eks.yaml
+
+A configuration similar to the following should be present but it will be specific to Your environment.
+
+![infralib_configure.png](infralib_configure.png)
 
 ### 3) Use the Infralib Agent
 
@@ -186,9 +192,11 @@ The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <http
 
 The essential integratsions are also installed into the Kubernetes cluster.
 
+Confifure the AWS Account number for fetching the generated infrastructure code.
+> $ export AWS_ACCOUNT="..."
 
 To investigate the generated infrastructure code more conveniently use the aws cli to copy it. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.
-> $ export AWS_ACCOUNT="..."
+
 > $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ./quickstart_s3
 
 Network step
@@ -259,6 +267,6 @@ The created role and policy can be seen in the AWS Console under IAM and roles. 
 
 To dig deeper into Infralib and Infralib Agent continue to "Bootrstap". <https://infralib-quickstart.dev.entigo.dev/2>
 
-Or go to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/4>
+Or go to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/5>
 
 

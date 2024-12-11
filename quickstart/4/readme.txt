@@ -1,66 +1,87 @@
-#Infralib - Cleanup / Uninstall
-
-Delete all the AWS resources created and uninstall the Infralib Agent.
-
-### 1) Delete Kubernetes objects
-
-Delete applications that create AWS resources.
-
-Delete the uploaded advertisment images from the S3 bucket.
-> $ aws s3 rm --recursive s3://$(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name)
-> $ aws s3api delete-objects --bucket $(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name) --delete "$(aws s3api list-object-versions --bucket $(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name) --output json --query '{Objects: Versions[].{Key:Key,VersionId:VersionId} || DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
-
-Delete "sales-portal" application.
-> $ kubectl patch app sales-portal -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
-> $ kubectl delete app sales-portal -n argocd
-> $ kubectl delete ns sales-portal
-
-Remove all the Ingress and PV resources to delete any AWS Load Balancers and EBS volumes.
-> $ kubectl delete ingress -A --all
-> $ kubectl delete pv --all
-
-Delete external-secrets.
-> $ kubectl patch app external-secrets-dev -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
-> $ kubectl delete app external-secrets-dev -n argocd
-> $ kubectl delete ns external-secrets-dev
-
-Delete external-dns.
-> $ kubectl patch app external-dns-dev -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
-> $ kubectl delete app external-dns-dev -n argocd
-> $ kubectl delete ns external-dns-dev
-
-Delete aws-alb
-> $ kubectl patch app aws-alb-dev -n argocd -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
-> $ kubectl delete app aws-alb-dev -n argocd
-> $ kubectl delete ns aws-alb-dev
+#Infralib - Updating
 
 
-### 2) Delete the resources created external-dns
+### 1) Install Entigo Training Application.
 
-Navigate to route53 and delete all the records except NS and SOA type in the newly created "dev.Your parent DNS zone" zone. <https://console.aws.amazon.com/route53/v2/hostedzones>
+Infralib is intended for infrastructure management, not end user applications. But in this lab we will install a taining application to demonstrate some features it has.
 
-![r53.png](r53.png)
+Add a new application that is present in the <https://github.com/martivo/entigo-infralib-training> source.
 
-### 3) Delete the resources created by Terraform
+> $ diff ~/3/config_il.yaml ~/4/config_app.yaml
 
-Enable all **three** of the **"dev-infra-destroy"** pipeline transitions. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-infra-destroy/view>
+Copy the updated configuration.
+> $ cp ../4/config_app.yaml ./config.yaml
 
-![transitions.png](transitions.png)
+Run the Infralib Agent.
+> $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
 
-Run the pipeline for "dev-infra-destroy" and Approve the pipeline manually.
+While the pipeline runs You can observe the application creation in ArgoCD. 
 
-![run.png](run.png)
+After the "dev-apps" steps "Plan" stage finishes the **"sales-portal"** application will appear in the ArgoCD. <https://argocd.dev.uN.entigo.dev/applications>
 
-**Wait for the "ApplyDestroy" stage to finish.**
+When the "Apply" stage of the "dev-apps" step has not started, none of the resources have been created.
 
-Repeat the same for the **"dev-net-destroy"** pipeline after the "dev-infra-destroy" "ApplyDestroy" has finished. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-net-destroy/view>
+![argocd_outofsync.png](argocd_outofsync.png)
 
-**Wait for the dev-net-destroy pipeline to finish before proceeding.**
+After the "Apply" stage starts the objects are being created.
 
-### 4) Delete the resources created by the Infralib Agent
+![argocd_syncing.png](argocd_syncing.png)
+
+Finally the object becomes healthy and the pipeline finishes.
+
+![argocd_healthy.png](argocd_healthy.png)
 
 
-Start the agent with the *"delete"* option and --delete-bucket and --delete-service-account flags.
-> $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent delete --delete-bucket --delete-service-account -c /conf/config.yaml
+Use the aws cli to copy the generated code into the lab server.
 
-Press "Y" to confirm the deletion.
+> $ aws s3 cp --recursive --exclude '*/.terraform/*' s3://dev-$AWS_ACCOUNT-$AWS_REGION/steps ./quickstart_s3_4
+
+The application expects the database hostname and database name in the input. It will find the inputs automatically from the "aws/mariadb" Terraform module.
+
+The Infralib Agents reads the added file of the module <https://github.com/martivo/entigo-infralib-training/blob/v2.0.30/modules/k8s/training-application/agent_input_aws.yaml>.
+
+You can see the literal values in the "sales-portal.yaml" file.
+> $ cat ./quickstart_s3_4/dev-apps/sales-portal.yaml |  grep --color=always -C 30 " host:\|       name:\| db:"
+
+
+There are no passwords in the infrastructure code. The "aws/mariadb" Terraform module has saved the database username and password in the AWS SM.
+
+The application leverages External Secrets to get the password and username.
+> $ kubectl get externalsecrets -n sales-portal db -o json | jq .spec.data
+
+The "ExternalSecrets" object creates the "Secret" object using the values from AWS SecretsManager. 
+> $ kubectl get secret -n sales-portal db -o json | jq .data
+
+Try to use the application by adding advertisements. <https://sales.dev.uN.entigo.dev>
+
+
+### 2) Update the Training Application modules.
+
+Update the training application to the latest version. The newest version comes with an image upload feature. For that an S3 bucket is used and a new workload is installed called "img".
+
+Remove the version lock from the source to enable update to a newer version.
+
+> $ diff ~/4/config_app.yaml ~/4/config_updates.yaml
+
+Copy the updated configuration and use the Infralib Agent **"update"** command.
+> $ cp ../4/config_updates.yaml ./config.yaml
+
+> $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent update -c /conf/config.yaml
+
+The "dev-net" step does not use modules from the new source that has updates, so the Infralib Agent will skip running it.
+
+The "dev-infra" step will only run once to make sure the code is in sync with the infrastructure. Later version changes of this update do not run the pipeline since the "aws/mariadb" modules checksum does not change.
+
+The "dev-apps" step is approved automatically for each version. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-apps/view>
+
+The version 2.0.37 contains a database schema update and a new "img" workload.
+Verify that the new bucket is created <https://console.aws.amazon.com/s3/buckets>
+
+The version 2.0.32 updates the "api" and "form" workloads to support the new feature.
+It is possible to make sure the api and form components are working before updating the user interface of the "web" component to allow for image uploads.
+
+The version 2.0.33 updates the "web" workload to display the new UI for the users. 
+
+After the update is finished try to use the application and add advertisements with pictures. <https://sales.dev.uN.entigo.dev> (Try reloading the page when the image upload is not visible.)
+
+Proceed to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/5>

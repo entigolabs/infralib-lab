@@ -50,6 +50,10 @@ The "dev-infra" pipeline will now contain the custom Terraform code that was add
 
 > $ cat ./quickstart_s3_2/dev-infra/securitygroups.tf
 
+To see differences of before and after Infralib Agent has tempalted the file.
+> $ diff ../3/securitygroups.tf ./quickstart_s3_2/dev-infra/securitygroups.tf
+
+Verify the Security Group (**"dev-developers"**) was created <https://console.aws.amazon.com/ec2/home#SecurityGroups:>
 
 ### 2) Use infralib module
 
@@ -72,6 +76,8 @@ Run the infralib agent.
 
 **The "securitygroups.tf" file was removed.** This causes resource deletion and as a result the Infralib Agent will **NOT** automatically approve the "dev-infra" pipeline. 
 
+![agent_manual_approval.png](agent_manual_approval.png)
+
 The Infralib Agent can be configured to behave differently, but this is the default behaviour. This process works with Kubernetes objects too.
 
 ![agent_5.png](agent_5.png)
@@ -93,7 +99,13 @@ The Gitlab pipeline will finish once the "dev-infra" step Apply stage finishes.
 ![gitlab_done.png](gitlab_done.png)
 
 
-Verify that the **"dev-developers"** Security Group has been removed.  <https://console.aws.amazon.com/ec2/home#SecurityGroups:>
+Verify that the RDS database and access credentials in Secrets Manager was created and the Security Group was deleted.
+
+RDS <https://console.aws.amazon.com/rds/home#databases:> 
+
+Secrets Manager <https://console.aws.amazon.com/secretsmanager/listsecrets>
+
+Security Group (**"dev-developers"**) <https://console.aws.amazon.com/ec2/home#SecurityGroups:>
 
 Use the aws cli to copy the generated code into the lab server.
 
@@ -102,5 +114,7 @@ Use the aws cli to copy the generated code into the lab server.
 The module "database" has been added to the "main.tf" file with the inputs filled. **Only "allocated_storage: 21" was configured in the Infralib Agent configuration.**
 > $ cat ./quickstart_s3_3/dev-infra/main.tf
 
+To dig deeper into Infralib and Infralib Agent continue to "Updates". <https://infralib-quickstart.dev.entigo.dev/4>
 
-To clean up all the created resources go to "Delete created resources". <https://infralib-quickstart.dev.entigo.dev/4>
+The weak can give up and go to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/5>
+
