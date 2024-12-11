@@ -2,7 +2,24 @@
 
 Provision Kubernetes on AWS with integrations using the Infralib Agent. 
 
-### 1) Clone the example project and configure it
+### 1) Prequesites / Requierments
+
+This quickstart guide assumes the following tools are available:
+
+kubectl <https://kubernetes.io/docs/tasks/tools/#kubectl>
+
+AWS CLI  <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions>
+
+docker <https://docs.docker.com/engine/install/>
+
+You will also need an AWS Account with Administrator privileges. We recommend to use an empty account with no other resources in it to avoid any unintentional consequences.
+
+**There will be additional costs in the used AWS account from the resources created during this guide.** The last chapter of the guide will show how to delete all the created resources.
+
+The account should also contain a publicly resolvable Route53 DNS Zone where sub domains can be created in.
+
+
+### 2) Clone the example project and configure it
 
 Clone the **"infralib-lab"** repository that contains the example project.
 > $ git clone --depth 1 --branch main https://github.com/entigolabs/infralib-lab.git
@@ -29,11 +46,11 @@ Option 1: Configure AWS user.
 > $ echo "aws_auth_user: CHANGEME" >> config/infra/eks.yaml
 
 
-Option 2: Configure AWS Role. (When using AWS SSO then the following wildcard value could be used AWSReservedSSO\_AWSAdministratorAccess\_.*)
+Option 2: Configure AWS Role. When using AWS SSO then the following wildcard value could be used AWSReservedSSO\_AWSAdministratorAccess\_.*
 > $ echo "iam_admin_role: CHANGEME" >> config/infra/eks.yaml
 
 
-### 2) Use the Infralib Agent
+### 3) Use the Infralib Agent
 
 Configure the AWS_REGION you want to use.
 > $ export AWS_REGION="eu-north-1"
@@ -185,7 +202,7 @@ Apps step
 > $ cat ./quickstart_s3/dev-apps/external-dns-dev.yaml
 
 
-### 4) Get access to the AWS EKS cluster
+### 5) Get access to the AWS EKS cluster
 
 Configure the "kubectl" context with aws cli to access the created Kubernetes cluster
 
@@ -209,7 +226,7 @@ Wait for the ArgoCD Ingress Load Balancer to be provisioned to be able to access
 
 ![kubectl.png](kubectl.png)
 
-### 5) Get access to ArgoCD
+### 6) Get access to ArgoCD
 
 Fetch the generated ArgoCD admin password and log in to the web interface.
 
@@ -242,6 +259,6 @@ The created role and policy can be seen in the AWS Console under IAM and roles. 
 
 To dig deeper into Infralib and Infralib Agent continue to "Bootrstap". <https://infralib-quickstart.dev.entigo.dev/2>
 
-The weak can give up and go to "Delete created resources". <https://infralib-quickstart.dev.entigo.dev/4>
+Or go to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/4>
 
 

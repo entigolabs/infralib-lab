@@ -1,4 +1,4 @@
-#Infralib - Delete created resources
+#Infralib - Cleanup / Uninstall
 
 Delete all the AWS resources created and uninstall the Infralib Agent.
 
@@ -37,13 +37,13 @@ Delete aws-alb
 
 ### 2) Delete the resources created external-dns
 
-Navigate to route53 and delete all the records except NS and SOA type in the "dev.uN.entigo.dev" zone. <https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones?region=eu-north-1#>
+Navigate to route53 and delete all the records except NS and SOA type in the newly created "dev.Your parent DNS zone" zone. <https://console.aws.amazon.com/route53/v2/hostedzones>
 
 ![r53.png](r53.png)
 
 ### 3) Delete the resources created by Terraform
 
-Enable all **three** of the **"dev-infra-destroy"** pipeline transitions. <https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-infra-destroy/view?region=eu-north-1>
+Enable all **three** of the **"dev-infra-destroy"** pipeline transitions. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-infra-destroy/view>
 
 ![transitions.png](transitions.png)
 
@@ -53,7 +53,7 @@ Run the pipeline for "dev-infra-destroy" and Approve the pipeline manually.
 
 **Wait for the "ApplyDestroy" stage to finish.**
 
-Repeat the same for the **"dev-net-destroy"** pipeline after the "dev-infra-destroy" "ApplyDestroy" has finished. <https://eu-north-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-net-destroy/view?region=eu-north-1>
+Repeat the same for the **"dev-net-destroy"** pipeline after the "dev-infra-destroy" "ApplyDestroy" has finished. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-net-destroy/view>
 
 **Wait for the dev-net-destroy pipeline to finish before proceeding.**
 
@@ -61,7 +61,6 @@ Repeat the same for the **"dev-net-destroy"** pipeline after the "dev-infra-dest
 
 
 Start the agent with the *"delete"* option and --delete-bucket and --delete-service-account flags.
-> $ cd ~/iac
 > $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent delete --delete-bucket --delete-service-account -c /conf/config.yaml
 
 Press "Y" to confirm the deletion.
