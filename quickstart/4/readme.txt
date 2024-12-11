@@ -17,7 +17,7 @@ Run the Infralib Agent.
 
 While the pipeline runs You can observe the application creation in ArgoCD. 
 
-After the "dev-apps" steps "Plan" stage finishes the **"sales-portal"** application will appear in the ArgoCD. <https://argocd.dev.uN.entigo.dev/applications>
+After the "dev-apps" steps "Plan" stage finishes the **"sales-portal"** application will appear in the ArgoCD. 
 
 When the "Apply" stage of the "dev-apps" step has not started, none of the resources have been created.
 
@@ -52,7 +52,11 @@ The application leverages External Secrets to get the password and username.
 The "ExternalSecrets" object creates the "Secret" object using the values from AWS SecretsManager. 
 > $ kubectl get secret -n sales-portal db -o json | jq .data
 
-Try to use the application by adding advertisements. <https://sales.dev.uN.entigo.dev>
+Get the URL for the application.
+> $ echo "https://$(kubectl get ingress -n sales-portal web -o jsonpath='{.spec.rules[0].host}')"
+
+
+Try to use the application by adding advertisements.
 
 
 ### 2) Update the Training Application modules.
@@ -82,6 +86,6 @@ It is possible to make sure the api and form components are working before updat
 
 The version 2.0.33 updates the "web" workload to display the new UI for the users. 
 
-After the update is finished try to use the application and add advertisements with pictures. <https://sales.dev.uN.entigo.dev> (Try reloading the page when the image upload is not visible.)
+After the update is finished try to use the application and add advertisements with pictures. (Try reloading the page when the image upload is not visible.)
 
 Proceed to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/5>
