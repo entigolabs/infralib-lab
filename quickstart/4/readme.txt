@@ -87,4 +87,6 @@ Verify that a new bucket is created <https://console.aws.amazon.com/s3/buckets>
 After the update is finished try to use the application and add advertisements with pictures. (Try reloading the page when the image upload is not visible.)
 > $ echo "https://$(kubectl get ingress -n sales-portal web -o jsonpath='{.spec.rules[0].host}')"
 
+![app_image_upload.png](app_image_upload.png)
+
 Proceed to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/5>
