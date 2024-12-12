@@ -1,5 +1,6 @@
 #Infralib - Bootstrap to the Cloud
 
+Run the Infrlaib Agent on the managed services of the cloud.
 
 ### 1) Bootstrap the Infralib Agent
 
@@ -19,7 +20,7 @@ Now it is possible to run the pipelines and the Infralib Agent using only the cl
 
 ![agent_bootstrap.png](agent_bootstrap.png)
 
-The Infralib Agent log can be observed from the **"agent-run"** pipeline by using the "View details" of the "AgentRun" stage.
+The Infralib Agent log can be observed from the **"agent-run"** pipeline by using the "View details" of the "AgentRun" stage. Please notice that now the steps are executed in parallel not sequentally, making the Infralib Agent run command faster.
 
 To update the Infralib modules, the **"agent-update"** pipeline can be used. At the moment there are no updates to be applied.
 

@@ -63,9 +63,6 @@ The creation of a "ClusterSecretStore" for the k8s/external-secrets module is al
 
 > $ diff ~/iac/config.yaml ~/3/config_il.yaml
 
-Please notice in the comparison that we no longer have to define most of the inputs for the "database" module.
-
-
 Copy the updated configuration, remove the "securitygroups.tf" file and commit changes to Git.
 > $ cp ../3/config_il.yaml ./config.yaml
 > $ rm ./config/infra/include/securitygroups.tf

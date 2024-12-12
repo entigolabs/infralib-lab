@@ -12,6 +12,8 @@ AWS CLI  <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-insta
 
 docker <https://docs.docker.com/engine/install/>
 
+![requirements.png]()
+
 You will also need an AWS Account with Administrator privileges. We recommend using an empty account with no other resources in it to avoid any unintentional consequences.
 
 **There will be additional costs in the used AWS account from the resources created during this guide.** The last chapter of the guide will show how to delete all the created resources.
@@ -28,9 +30,11 @@ Go to the example project directory.
 > $ cd infralib-lab/quickstart/iac
 > $ find .
 
-Configure the Route53 DNS zone to use. The example project will create sub domains into the existing Route53 domain. The quickstart assumes the DNS zone is present in the same account.
+Configure the Route53 DNS zone to use. The example project will create sub domains into the existing Route53 domain. The quickstart guide assumes the DNS zone is present in the same account.
 
 ![route53_zone.png](route53_zone.png)
+
+Set the Route53 Hosted zone ID value for AWS\_ROUTE53\_PARENT\_ZONE.
 
 > export AWS_ROUTE53_PARENT_ZONE="..."
 
@@ -58,7 +62,7 @@ A configuration similar to the following should be present but it will be specif
 
 ### 3) Use the Infralib Agent
 
-Configure the AWS_REGION you want to use.
+Configure the AWS_REGION to be used.
 > $ export AWS_REGION="eu-north-1"
 
 Configure access credentials with Administrative privileges.
