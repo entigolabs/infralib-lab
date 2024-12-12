@@ -50,7 +50,7 @@ The "dev-infra" pipeline will now contain the custom Terraform code that was add
 
 > $ cat ./quickstart_s3_2/dev-infra/securitygroups.tf
 
-To see differences of before and after Infralib Agent has tempalted the file.
+To see differences of before and after Infralib Agent has templated the file.
 > $ diff ../3/securitygroups.tf ./quickstart_s3_2/dev-infra/securitygroups.tf
 
 Verify the Security Group (**"dev-developers"**) was created <https://console.aws.amazon.com/ec2/home#SecurityGroups:>

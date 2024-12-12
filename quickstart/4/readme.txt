@@ -3,7 +3,7 @@
 
 ### 1) Install Entigo Training Application.
 
-Infralib is intended for infrastructure management, not end user applications. But in this lab we will install a taining application to demonstrate some features it has.
+Infralib is intended for infrastructure management, not end user applications. But in this lab we will install a training application to demonstrate some features it has.
 
 Add a new application that is present in the <https://github.com/martivo/entigo-infralib-training> source.
 

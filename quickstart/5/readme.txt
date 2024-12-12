@@ -6,7 +6,7 @@ Delete all the AWS resources created and uninstall the Infralib Agent.
 
 Delete applications that create AWS resources.
 
-Delete the uploaded advertisment images from the S3 bucket.
+Delete the uploaded advertisement images from the S3 bucket.
 > $ aws s3 rm --recursive s3://$(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name)
 > $ aws s3api delete-objects --bucket $(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name) --delete "$(aws s3api list-object-versions --bucket $(kubectl get ObjectStorageBucket -n sales-portal -o json img | jq -r .spec.parameters.name) --output json --query '{Objects: Versions[].{Key:Key,VersionId:VersionId} || DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
 

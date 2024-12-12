@@ -2,7 +2,7 @@
 
 Provision Kubernetes on AWS with integrations using the Infralib Agent. 
 
-### 1) Prequesites / Requierments
+### 1) Prerequisites / Requirements
 
 This quickstart guide assumes the following tools are available:
 
@@ -12,11 +12,11 @@ AWS CLI  <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-insta
 
 docker <https://docs.docker.com/engine/install/>
 
-You will also need an AWS Account with Administrator privileges. We recommend to use an empty account with no other resources in it to avoid any unintentional consequences.
+You will also need an AWS Account with Administrator privileges. We recommend using an empty account with no other resources in it to avoid any unintentional consequences.
 
 **There will be additional costs in the used AWS account from the resources created during this guide.** The last chapter of the guide will show how to delete all the created resources.
 
-The account should also contain a publicly resolvable Route53 DNS Zone where sub domains can be created in.
+The account should also contain a publicly resolvable Route53 DNS Zone where sub domains can be created.
 
 
 ### 2) Clone the example project and configure it
@@ -34,7 +34,7 @@ Configure the Route53 DNS zone to use. The example project will create sub domai
 
 > export AWS_ROUTE53_PARENT_ZONE="..."
 
-Configure it in the infralib Route53 configuration file under the "parent_zone_id" input variable.
+Configure it in the infralib Route53 configuration file under the "parent\_zone\_id" input variable.
 > $ sed -i "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
 
 Verify the zone is configured in the "config/net/dns.yaml" file **"parent\_zone\_id"** field.
@@ -108,7 +108,7 @@ This enables Terraform to communicate with the resources in the private subnets 
 
 The "aws/eks" module will provision a Kubernetes cluster with nodegroups. 
 
-The "eks" configuration is are placed in separate file.
+The "eks" configuration is placed in a separate file.
 > $ cat ~/iac/config/infra/eks.yaml
 
 
@@ -121,7 +121,7 @@ The "aws/crossplane" module creates needed permissions for the AWS Crossplane pr
 
 In this step we install the much needed integrations into the Kubernetes cluster using ArgoCD.
 
-The "argocd" applications ingress annotations are changed for the lab purpose from the defaults. Here the **"inputs"** block is used to configure the module, unlike in the "net" or "infra" step. The configuration change makes ArgoCD available on the pulic network, the module defaults would not make it public.
+The "argocd" application ingress annotations are changed for the lab purpose from the defaults. Here the **"inputs"** block is used to configure the module, unlike in the "net" or "infra" step. The configuration change makes ArgoCD available on the public network, the module defaults would not make it public.
 
 Find the CodePipeline job for the "net" step. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines>
 
@@ -190,9 +190,9 @@ A wildcard certificate for the domain <https://console.aws.amazon.com/acm/home#/
 
 The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <https://console.aws.amazon.com/eks/home#>
 
-The essential integratsions are also installed into the Kubernetes cluster.
+The essential integrations are also installed into the Kubernetes cluster.
 
-Confifure the AWS Account number for fetching the generated infrastructure code.
+Configure the AWS Account number for fetching the generated infrastructure code.
 > $ export AWS_ACCOUNT="..."
 
 To investigate the generated infrastructure code more conveniently use the aws cli to copy it. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.
@@ -251,7 +251,7 @@ ArgoCD web UI also relies on multiple integrations itself:
 
   "aws/route53" - for DNS zone and TLS Certificates.
   
-  "k8s/aws-alb" - To create Application Load Balancer in AWS for Ingress object.
+  "k8s/aws-alb" - To create Application Load Balancer in AWS for Ingress objects.
   
   "k8s/external-dns" - create the required DNS record for Ingress object.
 
@@ -265,7 +265,7 @@ The created role and policy can be seen in the AWS Console under IAM and roles. 
 
 ![dev_iam.png](dev_iam.png)
 
-To dig deeper into Infralib and Infralib Agent continue to "Bootrstap". <https://infralib-quickstart.dev.entigo.dev/2>
+To dig deeper into Infralib and Infralib Agent continue to "Bootstrap". <https://infralib-quickstart.dev.entigo.dev/2>
 
 Or go to "Cleanup / Uninstall". <https://infralib-quickstart.dev.entigo.dev/5>
 
