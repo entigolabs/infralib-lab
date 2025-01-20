@@ -50,7 +50,7 @@ Option 1: Configure AWS IAM User. Change the following command to your needs or 
 > $ echo "aws_auth_user: john" >> config/infra/eks.yaml
 
 
-Option 2: Configure AWS Role. Change the following command to your needs or skip it. When using AWS SSO then the following wildcard value could be used AWSReservedSSO\_AWSAdministratorAccess\_.*
+Option 2: Configure AWS Role. Change the following command to your needs or skip it. When using AWS SSO then one of the following wildcard values might work for you: AWSReservedSSO\_AWSAdministratorAccess\_.* or AWSReservedSSO_AdministratorAccess_.*. Yuu can see your current SSO role when clicking on your username in the upper right corner of the AWS console.
 > $ echo "iam_admin_role: AWSReservedSSO_AWSAdministratorAccess_.*" >> config/infra/eks.yaml
 
 Verify that either **"aws\_auth\_user"** or/and **"iam\_admin\_role"** is/are configured in the "config/infra/eks.yaml" file.
