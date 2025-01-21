@@ -63,7 +63,7 @@ The creation of a "ClusterSecretStore" for the k8s/external-secrets module is al
 
 > $ diff ~/iac/config.yaml ~/3/config_il.yaml
 
-Copy the updated configuration, remove the "securitygroups.tf" file and commit changes to Git.
+Copy the updated configuration and remove the "securitygroups.tf" file.
 > $ cp ../3/config_il.yaml ./config.yaml
 > $ rm ./config/infra/include/securitygroups.tf
 
