@@ -46,11 +46,19 @@ Verify the zone is configured in the "config/net/dns.yaml" file **"parent\_zone\
 
 Configure a AWS IAM Role or IAM User to be an Administrator of EKS:
 
-Option 1: Configure AWS IAM User. Change the following command to your needs or skip it. Example value: john
+Option 1: Configure AWS IAM User. 
+
+To list existing AWS IAM Users:
+> $ aws iam list-users --output json | jq -r '.Users[].UserName'
+Change the following command to your needs or skip it. Example value: john
 > $ echo "aws_auth_user: john" >> config/infra/eks.yaml
 
 
-Option 2: Configure AWS Role. Change the following command to your needs or skip it. When using AWS SSO then one of the following wildcard values might work for you: AWSReservedSSO\_AWSAdministratorAccess\_.* or AWSReservedSSO_AdministratorAccess\_.*. The current SSO role can be seen when clicking on the username in the upper right corner of the AWS Console.
+Option 2: Configure AWS Role. The current SSO role can be seen when clicking on the username in the upper right corner of the AWS Console.
+
+To list existin AWS IAM Roles:
+> $ aws iam list-roles --output json --query 'Roles[?starts_with(Path, `/aws-service-role/`) == `false`]' | jq -r '.[].RoleName'
+Change the following command to your needs or skip it. When using AWS SSO then one of the following wildcard values might work for you: AWSReservedSSO\_AWSAdministratorAccess\_.* or AWSReservedSSO_AdministratorAccess\_.*. 
 > $ echo "iam_admin_role: AWSReservedSSO_AWSAdministratorAccess_.*" >> config/infra/eks.yaml
 
 Verify that either **"aws\_auth\_user"** or/and **"iam\_admin\_role"** is/are configured in the "config/infra/eks.yaml" file.
