@@ -1,6 +1,6 @@
 FROM martivo/lab-presenter:html AS builder
 COPY . /app/source
-RUN node . source && cp *.css /app/source/html/ && cp *.js /app/source/html/ && cp img/* /app/source/html
+RUN node . --folder source && cp *.css /app/source/html/ && cp *.js /app/source/html/ && cp img/* /app/source/html
 
 
 FROM nginx

@@ -12,7 +12,7 @@ AWS CLI  <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-insta
 
 docker <https://docs.docker.com/engine/install/>
 
-![requirements.png]()
+![requirements.png](requirements.png)
 
 You will also need an AWS Account with Administrator privileges. We recommend using an empty account with no other resources in it to avoid any unintentional consequences.
 
