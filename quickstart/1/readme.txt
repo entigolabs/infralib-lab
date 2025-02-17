@@ -39,7 +39,7 @@ Set the Route53 Hosted zone ID value for AWS\_ROUTE53\_PARENT\_ZONE.
 > export AWS_ROUTE53_PARENT_ZONE="..."
 
 Configure it in the infralib Route53 configuration file under the "parent\_zone\_id" input variable.
-> $ sed -i "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
+> $ sed -i'' "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
 
 Verify the zone is configured in the "config/net/dns.yaml" file **"parent\_zone\_id"** field.
 > $ cat config/net/dns.yaml
@@ -234,7 +234,7 @@ Wait for the External-dns integration to be started so the DNS records for the I
 
 Wait for the ArgoCD Ingress Load Balancer to be provisioned to be able to access ArgoCD web interface.
 > $ kubectl wait --for=jsonpath='{.status.loadBalancer.ingress}' -n argocd  ingress/argocd-server --timeout=300s
-> $ aws elbv2 wait load-balancer-available --region $AWS_REGION --names $(kubectl get ingress -n argocd argocd-server -o json | jq -r .status.loadBalancer.ingress[0].hostname | cut -d"-" -f1-3)
+> $ aws elbv2 wait load-balancer-available --region $AWS_REGION --names $(kubectl get ingress -n argocd argocd-server -o json | jq -r '.status.loadBalancer.ingress[0].hostname' | cut -d"-" -f1-3)
 
 ![kubectl.png](kubectl.png)
 
