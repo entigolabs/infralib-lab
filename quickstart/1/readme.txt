@@ -56,7 +56,7 @@ Change the following command to your needs or skip it. Example value: john
 
 Option 2: Configure AWS Role. The current SSO role can be seen when clicking on the username in the upper right corner of the AWS Console.
 
-To list existin AWS IAM Roles:
+To list existing AWS IAM Roles:
 > $ aws iam list-roles --output json --query 'Roles[?starts_with(Path, `/aws-service-role/`) == `false`]' | jq -r '.[].RoleName'
 Change the following command to your needs or skip it. When using AWS SSO then one of the following wildcard values might work for you: AWSReservedSSO\_AWSAdministratorAccess\_.* or AWSReservedSSO_AdministratorAccess\_.*. 
 > $ echo "iam_admin_role: AWSReservedSSO_AWSAdministratorAccess_.*" >> config/infra/eks.yaml
