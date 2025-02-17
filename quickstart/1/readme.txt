@@ -39,7 +39,7 @@ Set the Route53 Hosted zone ID value for AWS\_ROUTE53\_PARENT\_ZONE.
 > export AWS_ROUTE53_PARENT_ZONE="..."
 
 Configure it in the infralib Route53 configuration file under the "parent\_zone\_id" input variable.
-> $ sed -i'' "/^parent_zone_id:/s/:.*/: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
+> $ perl -i -pe "s/^parent_zone_id:.*$/parent_zone_id: $AWS_ROUTE53_PARENT_ZONE/" config/net/dns.yaml
 
 Verify the zone is configured in the "config/net/dns.yaml" file **"parent\_zone\_id"** field.
 > $ cat config/net/dns.yaml
