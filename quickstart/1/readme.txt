@@ -151,7 +151,7 @@ The Terraform plan only intends to create resources, as a result **the Infralib 
 
 ![dev_net_apply.png](dev_net_apply.png)
 
-Access the Terraform apply log by opening "View details" on the **Apply** stage.
+Access the Terraform apply log by opening "AWS CodeBuild" on the **Apply** stage.
 
 ![dev_net_apply_log.png](dev_net_apply_log.png)
 
@@ -205,7 +205,7 @@ The AWS EKS Kubernetes cluster is provisioned with Add Ons and Node Groups <http
 The essential integrations are also installed into the Kubernetes cluster.
 
 Configure the AWS Account number for fetching the generated infrastructure code.
-> $ export AWS_ACCOUNT="..."
+> $ export AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 
 To investigate the generated infrastructure code more conveniently use the aws cli to copy it. The ".terraform" folder is excluded, it is used for caching the Terraform modules and providers.
 
