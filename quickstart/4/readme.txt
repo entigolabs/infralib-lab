@@ -38,7 +38,7 @@ Use the aws cli to copy the generated code into the lab server.
 
 The application expects the database hostname and database name in the input. It will find the inputs automatically from the "aws/mariadb" Terraform module.
 
-The Infralib Agents reads the added file of the module <https://github.com/martivo/entigo-infralib-training/blob/v2.0.30/modules/k8s/training-application/agent_input_aws.yaml>.
+The Infralib Agents reads the added file of the module <https://github.com/martivo/entigo-infralib-training/blob/main/modules/k8s/training-application/agent_input_aws.yaml>.
 
 You can see the literal values in the "sales-portal.yaml" file.
 > $ cat ./quickstart_s3_4/dev-apps/sales-portal.yaml |  grep --color=always -C 30 " host:\|       name:\| db:"
