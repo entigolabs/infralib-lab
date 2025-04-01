@@ -22,6 +22,8 @@ Now it is possible to run the pipelines and the Infralib Agent using only the cl
 
 The Infralib Agent log can be observed from the **"agent-run"** pipeline by using the "View details" of the "AgentRun" stage. Please notice that now the steps are executed in parallel not sequentally, making the Infralib Agent run command faster.
 
+![agent_bootstrap_done.png](agent_bootstrap_done.png)
+
 To update the Infralib modules, the **"agent-update"** pipeline can be used. At the moment there are no updates to be applied.
 
 The **"config"** folder and file are also synced to the Object Storage bucket. The bucket has versioning enabled, so there is also a version history of the configuration.
