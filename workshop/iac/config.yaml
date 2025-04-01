@@ -4,7 +4,8 @@ prefix: dev
 steps:
   - name: net
     type: terraform
-    approve: major
+    manual_approve_update: removes
+    manual_approve_run: changes
     modules:
       - name: main
         source: aws/vpc
@@ -12,7 +13,8 @@ steps:
         source: aws/route53
   - name: infra
     type: terraform
-    approve: major
+    manual_approve_update: removes
+    manual_approve_run: changes
     vpc:
       attach: true
     modules:
@@ -33,7 +35,8 @@ steps:
         source: aws/crossplane
   - name: apps
     type: argocd-apps
-    approve: major
+    manual_approve_update: removes
+    manual_approve_run: changes
     modules:
       - name: argocd
         source: argocd
