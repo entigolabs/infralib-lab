@@ -106,10 +106,11 @@ The "aws/route53" module is named as "dns". It creates a public DNS zone using r
 
 The "dns" and "vpc" configurations are placed in separate files to make the configuration easier to read and manage. 
 
+
 > $ cat ~/iac/config/net/main.yaml
 > $ cat ~/iac/config/net/dns.yaml
 
-
+The "aws/ecr-proxy" module is named as "ecr-proxy". It creates AWS ECR Pull through Cache for public container image registires, such as Quay and Docker Hub.
 
 **Step: infra**
 
