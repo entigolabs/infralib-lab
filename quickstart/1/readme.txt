@@ -44,6 +44,12 @@ Configure it in the infralib Route53 configuration file under the "parent\_zone\
 Verify the zone is configured in the "config/net/dns.yaml" file **"parent\_zone\_id"** field.
 > $ cat config/net/dns.yaml
 
+Configure access credentials with Administrative privileges.
+> $ export AWS_ACCESS_KEY_ID="..."
+> $ export AWS_SECRET_ACCESS_KEY="..."
+(Optional) You might have to set AWS\_SESSION\_TOKEN if temporary tokens are used.
+> $ export AWS_SESSION_TOKEN="..."
+
 Configure a AWS IAM Role or IAM User to be an Administrator of EKS:
 
 Option 1: Configure AWS IAM User. 
@@ -73,14 +79,7 @@ A configuration similar to the following should be present but it will be specif
 Configure the AWS_REGION to be used.
 > $ export AWS_REGION="eu-north-1"
 
-Configure access credentials with Administrative privileges.
-> $ export AWS_ACCESS_KEY_ID="..."
-> $ export AWS_SECRET_ACCESS_KEY="..."
-(Optional) You might have to set AWS\_SESSION\_TOKEN if temporary tokens are used.
-> $ export AWS_SESSION_TOKEN="..."
-
 Use the Infralib Agent **"run"** command to create the infrastructure code, deploy pipelines and create all the cloud resources.
-
 
 > $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
 
