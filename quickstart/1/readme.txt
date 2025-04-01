@@ -143,7 +143,7 @@ Click on the pipeline **"dev-net"** to see the pipeline Source, Plan, Approve an
 
 ![dev_net_plan_details.png](dev_net_plan_details.png)
 
-Open the "View details" on the **Plan** stage to see the Terraform plan for this step.
+Click the "AWS CodeBuild" on the **Plan** stage to see the Terraform plan for this step.
 
 ![dev_net_plan_log.png](dev_net_plan_log.png)
 
