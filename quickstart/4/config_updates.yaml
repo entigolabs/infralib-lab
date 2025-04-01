@@ -12,6 +12,8 @@ steps:
         source: aws/vpc
       - name: dns
         source: aws/route53
+      - name: ecr-proxy
+        source: aws/ecr-proxy
   - name: infra
     type: terraform
     manual_approve_update: removes
