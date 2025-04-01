@@ -1,12 +1,13 @@
 sources:
   - url: https://github.com/entigolabs/entigo-infralib-release
   - url: https://github.com/martivo/entigo-infralib-training
-    version: 2.0.43
+    version: 1.0.0
 prefix: dev
 steps:
   - name: net
     type: terraform
-    approve: major
+    manual_approve_update: removes
+    manual_approve_run: changes
     modules:
       - name: main
         source: aws/vpc
@@ -14,7 +15,8 @@ steps:
         source: aws/route53
   - name: infra
     type: terraform
-    approve: major
+    manual_approve_update: removes
+    manual_approve_run: changes
     vpc:
       attach: true
     modules:
@@ -28,7 +30,8 @@ steps:
           allocated_storage: 21
   - name: apps
     type: argocd-apps
-    approve: major
+    manual_approve_update: removes
+    manual_approve_run: changes
     modules:
       - name: argocd
         source: argocd
