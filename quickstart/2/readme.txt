@@ -20,7 +20,7 @@ Now it is possible to run the pipelines and the Infralib Agent using only the cl
 
 ![agent_bootstrap.png](agent_bootstrap.png)
 
-The Infralib Agent log can be observed from the **"agent-run"** pipeline by using the "View details" of the "AgentRun" stage. Please notice that now the steps are executed in parallel not sequentally, making the Infralib Agent run command faster.
+The Infralib Agent log can be observed from the **"agent-run"** pipeline by clicking the "AWS CodeBuild" of the "AgentRun" stage. Please notice that now the steps are executed in parallel not sequentally, making the Infralib Agent run command faster.
 
 ![agent_bootstrap_done.png](agent_bootstrap_done.png)
 

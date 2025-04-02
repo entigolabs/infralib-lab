@@ -2,35 +2,35 @@
 set -o xtrace
 
 
-unset AWS_SECRET_ACCESS_KEY
-unset AWS_ACCESS_KEY_ID
-unset AWS_SESSION_TOKEN
-
-
-aws sso login --profile entigo-prod-training-admin
-aws eks update-kubeconfig --name infralib-infra-eks --profile entigo-prod-training-admin
-
-export OIDC=`aws eks describe-cluster --name infralib-infra-eks --query "cluster.identity.oidc.issuer" --output text --profile entigo-prod-training-admin  | sed 's/https:\/\///'`
-
-if [ "$OIDC" == "" ]
-then
-  echo "Could not get EKS cluster OIDC"
-  exit 2
-fi
-
-kubectl get nodes
-if [ $? -ne 0 ]
-then
-  echo "No connection to kubernetes."
-  exit 1
-fi
-
-kubectl create ns html
-cat html.yaml | sed "s#OIDCVALUE#$OIDC#g" | kubectl apply -n html -f-
-
-
-kubectl create ns gitlab
-kubectl apply -n gitlab -f gitlab.yaml 
+# unset AWS_SECRET_ACCESS_KEY
+# unset AWS_ACCESS_KEY_ID
+# unset AWS_SESSION_TOKEN
+# 
+# 
+# aws sso login --profile entigo-prod-training-admin
+# aws eks update-kubeconfig --name infralib-infra-eks --profile entigo-prod-training-admin
+# 
+# export OIDC=`aws eks describe-cluster --name infralib-infra-eks --query "cluster.identity.oidc.issuer" --output text --profile entigo-prod-training-admin  | sed 's/https:\/\///'`
+# 
+# if [ "$OIDC" == "" ]
+# then
+#   echo "Could not get EKS cluster OIDC"
+#   exit 2
+# fi
+# 
+# kubectl get nodes
+# if [ $? -ne 0 ]
+# then
+#   echo "No connection to kubernetes."
+#   exit 1
+# fi
+# 
+# kubectl create ns html
+# cat html.yaml | sed "s#OIDCVALUE#$OIDC#g" | kubectl apply -n html -f-
+# 
+# 
+# kubectl create ns gitlab
+# kubectl apply -n gitlab -f gitlab.yaml 
 
 export i=1
 
@@ -53,19 +53,19 @@ do
   ssh ubuntu@$uhost "curl -Lo k9s_Linux_x86_64.tar.gz https://github.com/derailed/k9s/releases/download/v0.32.4/k9s_Linux_amd64.tar.gz && tar xvzf k9s_Linux_x86_64.tar.gz && sudo mv k9s /usr/bin/"
   ssh ubuntu@$uhost "curl -Lo kubectl-neat_linux.tar.gz https://github.com/itaysk/kubectl-neat/releases/download/v2.0.2/kubectl-neat_linux.tar.gz && tar xvzf kubectl-neat_linux.tar.gz && sudo mv kubectl-neat /usr/bin/"
   ssh ubuntu@$uhost "sudo gpasswd -a user$i docker"
-
+  cat userinfo.sh | ssh ubuntu@$uhost "sudo tee -a /etc/profile.d/userinfo.sh && sudo chmod +x /etc/profile.d/userinfo.sh"
 
   let i++
   export i;
 done
 echo $i > current_students
 
-./prepare_html.sh 1
-./start.sh 1
-./start.sh 2
-./start.sh 3
-./start.sh 4
-./start.sh 5
+# ./prepare_html.sh 1
+# ./start.sh 1
+# ./start.sh 2
+# ./start.sh 3
+# ./start.sh 4
+# ./start.sh 5
 
   
-kubectl exec -n gitlab gitlab-0 -it -- grep 'Password:' /etc/gitlab/initial_root_password
+#kubectl exec -n gitlab gitlab-0 -it -- grep 'Password:' /etc/gitlab/initial_root_password
