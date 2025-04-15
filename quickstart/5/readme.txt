@@ -2,7 +2,7 @@
 
 Delete all the AWS resources created and uninstall the Infralib Agent.
 
-### 1) Delete Kubernetes objects
+### 1) Delete the Kubernetes objects assiciated to AWS Resources
 
 Delete applications that create AWS resources.
 
@@ -35,29 +35,27 @@ Delete aws-alb
 > $ kubectl delete ns aws-alb-dev
 
 
-### 2) Delete the resources created external-dns
+### 2) Delete the resources created by external-dns
 
 Navigate to route53 and delete all the records except NS and SOA type in the newly created "dev.Your parent DNS zone" zone. <https://console.aws.amazon.com/route53/v2/hostedzones>
 
 ![r53.png](r53.png)
 
-### 3) Delete the resources created by Terraform
+### 3) Delete the resources created by the pipelines
 
-Enable all **three** of the **"dev-infra-destroy"** pipeline transitions. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-infra-destroy/view>
+Run the "destroy" command of the agent. This will enable and execute the destroy pipelines to remove the resources.
 
-![transitions.png](transitions.png)
+> $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent destroy --yes --steps infra,net -c /conf/config.yaml
 
-Run the pipeline for "dev-infra-destroy" and Approve the pipeline manually.
 
-![run.png](run.png)
+### 4) Delete the ECR pull through cached repositories
+Some container images are cached by ECR. To remove them use the following script. The script will output the delete commands that you will have to run.
 
-**Wait for the "ApplyDestroy" stage to finish.**
+> for repo in $(aws ecr describe-repositories --query 'repositories[*].repositoryName' --output text); do
+>   echo "aws ecr delete-repository --repository-name \"$repo\" --force"
+> done
 
-Repeat the same for the **"dev-net-destroy"** pipeline after the "dev-infra-destroy" "ApplyDestroy" has finished. <https://console.aws.amazon.com/codesuite/codepipeline/pipelines/dev-net-destroy/view>
-
-**Wait for the dev-net-destroy pipeline to finish before proceeding.**
-
-### 4) Delete the resources created by the Infralib Agent
+### 5) Delete the resources created by the Infralib Agent
 
 
 Start the agent with the *"delete"* option and --delete-bucket and --delete-service-account flags.

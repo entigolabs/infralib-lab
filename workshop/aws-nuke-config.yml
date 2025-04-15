@@ -7,12 +7,14 @@ blocklist:
 - 046792967279
 - 324427516708
 
+
 resource-types:
+  alternatives:
+  - AWS::ECR::RepositoryCreationTemplate
   excludes:
+  - Cloud9
+  - Cloud9Environment
   - EC2KeyPair
-  - CloudWatchEventsRule
-  - CloudWatchEventsTarget
-  - KMSAlias
   - IAMSAMLProvider
   - ElasticacheCacheParameterGroup
   - Route53ResolverRule
@@ -27,7 +29,10 @@ resource-types:
   - AWS::AppFlow::Flow
   - AWS::AppRunner::Service
   - AthenaWorkGroup
+  - AthenaDataCatalog
   - MediaConvertQueue
+  - CloudWatchEventsTarget
+  - CloudWatchEventsRule
   - QuickSightUser
   - QuickSightSubscription
   - XRaySamplingRule
@@ -58,7 +63,43 @@ resource-types:
   - CodeStarProject
   - CodeStarNotificationRule
   - CodeStarConnection
-  - Cloud9Environment
+  - GameLiftFleet
+  - GameLiftBuild
+  - GameLiftQueue
+  - GameLiftMatchmakingConfiguration
+  - GameLiftMatchmakingRuleSet
+  - OSPackage
+  - ECRPublicRepository
+  - ECSCapacityProvider
+  - OpsWorksLayer
+  - OpsWorksApp
+  - OpsWorksUserProfile
+  - OpsWorksInstance
+  - OpsWorksCMBackup
+  - OpsWorksCMServerState
+  - OpsWorksCMServer
+  - CloudSearchDomain
+  - MachineLearningEvaluation
+  - MachineLearningDataSource
+  - MachineLearningBranchPrediction
+  - MachineLearningMLModel
+  - ElasticTranscoderPipeline
+  - ElasticTranscoderPreset
+  - TranscribeLanguageModel
+  - SNSSubscription
+  - AppStreamImage
+  - AppConfigDeploymentStrategy
+  - MemoryDBParameterGroup
+  - CodeDeployDeploymentConfig
+  - CodePipelineCustomActionType
+  - DAXParameterGroup
+  - MemoryDBACL
+  - BedrockCustomModel
+  - BedrockAgent
+  - BedrockPrompt
+  - BedrockEvaluationJob
+  - BedrockModelCustomizationJob
+  - IAMUserAccessKey
 
 accounts:
   "206332737656":
