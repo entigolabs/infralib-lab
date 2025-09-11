@@ -5,13 +5,13 @@ metadata:
     eks.amazonaws.com/role-arn: arn:aws:iam::206332737656:role/infralib-html
   name: html
 ---
-apiVersion: iam.aws.crossplane.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: Role
 metadata:
   name: infralib-html
 spec:
   forProvider:
-    assumeRolePolicyDocument: |
+    assumeRolePolicy: |
       {
         "Version": "2012-10-17",
         "Statement": [
@@ -33,14 +33,13 @@ spec:
   providerConfigRef:
     name: crossplane-aws
 ---
-apiVersion: iam.aws.crossplane.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: Policy
 metadata:
   name: infralib-html
 spec:
   forProvider:
-    name: infralib-html
-    document: |
+    policy: |
       {
         "Version": "2012-10-17",
         "Statement": [
@@ -72,14 +71,14 @@ spec:
   providerConfigRef:
     name: crossplane-aws
 ---
-apiVersion: iam.aws.crossplane.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
   name: infralib-html
 spec:
   forProvider:
     policyArn: arn:aws:iam::206332737656:policy/infralib-html
-    roleNameRef:
+    roleRef:
       name: infralib-html
   providerConfigRef:
     name: crossplane-aws
