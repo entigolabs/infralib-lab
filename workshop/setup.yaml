@@ -1,6 +1,5 @@
 sources:
   - url: https://github.com/entigolabs/entigo-infralib-release
-    version: stable
 prefix: infralib
 steps:
     - name: net
@@ -10,7 +9,6 @@ steps:
       modules:
         - name: main
           source: aws/vpc
-          version: stable
           inputs:
             azs: 2
             elasticache_subnets: |
@@ -20,7 +18,6 @@ steps:
             vpc_cidr: 10.83.0.0/16
         - name: dns
           source: aws/route53
-          version: stable
           inputs:
             create_private: false
             create_public: true
@@ -37,7 +34,6 @@ steps:
            source: aws/hello-world
         # - name: eks
         #   source: aws/eks
-        #   version: stable
         #   inputs:
         #     cluster_enabled_log_types: |
         #         []
@@ -66,7 +62,6 @@ steps:
         #     vpc_id: '{{ .ssm.net.main.vpc_id }}'
         # - name: crossplane
         #   source: aws/crossplane
-        #   version: stable
         #   inputs:
         #     eks_oidc_provider: |
         #         module.eks.oidc_provider
@@ -79,7 +74,6 @@ steps:
     #   modules:
     #     - name: argocd
     #       source: argocd
-    #       version: stable
     #       inputs:
     #         argocd:
     #           server:
@@ -89,22 +83,16 @@ steps:
     #                 alb.ingress.kubernetes.io/scheme: internet-facing
     #     - name: aws-alb-{{ .config.prefix }}
     #       source: aws-alb
-    #       version: stable
     #     - name: crossplane-system
     #       source: crossplane-core
-    #       version: stable
     #     - name: crossplane-aws
     #       source: crossplane-aws
-    #       version: stable
     #     - name: external-dns-{{ .config.prefix }}
     #       source: external-dns
-    #       version: stable
     #     - name: istio-base
     #       source: istio-base
-    #       version: stable
     #     - name: istio-system
     #       source: istio-istiod
-    #       version: stable
     #       inputs:
     #         istiod:
     #           global:
@@ -113,16 +101,12 @@ steps:
     #             traceSampling: 100
     #     - name: aws-storageclass
     #       source: aws-storageclass
-    #       version: stable
     #     - name: metrics-server
     #       source: metrics-server
-    #       version: stable
     #     - name: external-secrets-{{ .config.prefix }}
     #       source: external-secrets
-    #       version: stable
     #     - name: harbor
     #       source: harbor
-    #       version: stable
     #       inputs:
     #         global:
     #           aws:
