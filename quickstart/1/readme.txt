@@ -81,7 +81,7 @@ Configure the AWS_REGION to be used.
 
 Use the Infralib Agent **"run"** command to create the infrastructure code, deploy pipelines and create all the cloud resources.
 
-> $ docker run -it --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
+> $ docker run -it --pull always --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent run  -c /conf/config.yaml
 
 The console should display a similar log and the command will stay running for a while.  **Please continue with the quickstart without waiting for this command to finish, but do not close or cancel it.**
 
