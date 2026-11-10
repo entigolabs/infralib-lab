@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Base images of the quickstart (released by release.yaml) and the workshop
+  # html builder. A merged quickstart bump triggers a new quickstart release.
+  # martivo/lab-presenter:html has no version tag, so Dependabot cannot track it.
+  - package-ecosystem: docker
+    directories:
+      - /quickstart
+      - /workshop
+    schedule:
+      interval: weekly
+      day: monday
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns:
+          - "*"
