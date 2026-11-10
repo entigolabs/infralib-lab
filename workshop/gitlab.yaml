@@ -65,7 +65,7 @@ spec:
             cpu: 1000m
             memory: 4Gi
             ephemeral-storage: 100Mi
-        image: gitlab/gitlab-ce:17.3.4-ce.0
+        image: gitlab/gitlab-ce:19.5.3-ce.0
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
