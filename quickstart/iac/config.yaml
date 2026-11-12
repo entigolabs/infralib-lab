@@ -33,6 +33,8 @@ steps:
         source: argocd
         inputs:
           argocd:
+            dex:
+              enabled: false
             server:
               ingress:
                 annotations:
