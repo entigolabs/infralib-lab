@@ -6,7 +6,7 @@ RUN node . --folder source --no-user-prompt && cp *.css /app/source/html/ && cp 
 # Unprivileged nginx runs as uid 101. The port and redirect behaviour are set in
 # nginx-default.conf next to this file.
 # Exact tag on purpose: Dependabot bumps it, see .github/dependabot.yml.
-FROM nginx/nginx-unprivileged:1.31.8-alpine-slim
+FROM nginx/nginx-unprivileged:1.31.9-alpine-slim
 COPY nginx-default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/source/html  /usr/share/nginx/html
 EXPOSE 8081
